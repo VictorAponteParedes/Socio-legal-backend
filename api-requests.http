@@ -1,0 +1,115 @@
+### Variables
+@baseUrl = http://localhost:3000/api
+@clientToken = YOUR_CLIENT_TOKEN_HERE
+@lawyerToken = YOUR_LAWYER_TOKEN_HERE
+
+###############################################
+# AUTH ENDPOINTS
+###############################################
+
+### 1. Register Client
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Juan",
+  "lastname": "Pérez",
+  "email": "juan.perez@example.com",
+  "password": "password123",
+  "role": "client"
+}
+
+### 2. Register Lawyer
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "María",
+  "lastname": "González",
+  "email": "maria.gonzalez@example.com",
+  "password": "password123",
+  "role": "lawyer",
+  "license": "MP-12345"
+}
+
+### 3. Login Client
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "juan.perez@example.com",
+  "password": "password123"
+}
+
+### 4. Login Lawyer
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "maria.gonzalez@example.com",
+  "password": "password123"
+}
+
+###############################################
+# PROTECTED ENDPOINTS (Add after implementing)
+###############################################
+
+### Get Current User Profile
+GET {{baseUrl}}/users/profile
+Authorization: Bearer {{clientToken}}
+
+### Update User Profile
+PATCH {{baseUrl}}/users/profile
+Authorization: Bearer {{clientToken}}
+Content-Type: application/json
+
+{
+  "phone": "+595981234567",
+  "address": "Av. Mariscal López 123"
+}
+
+###############################################
+# ERROR SCENARIOS
+###############################################
+
+### Invalid Email Format
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "lastname": "User",
+  "email": "invalid-email",
+  "password": "password123",
+  "role": "client"
+}
+
+### Lawyer Without License
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "lastname": "Lawyer",
+  "email": "test.lawyer@example.com",
+  "password": "password123",
+  "role": "lawyer"
+}
+
+### Login with Wrong Password
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "juan.perez@example.com",
+  "password": "wrongpassword"
+}
+
+### Login with Non-existent Email
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "nonexistent@example.com",
+  "password": "password123"
+}
