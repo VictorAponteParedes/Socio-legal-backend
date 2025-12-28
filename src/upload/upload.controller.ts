@@ -11,7 +11,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto'; // Usar crypto nativo de Node.js
 import { UploadService } from './upload.service';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -32,7 +32,7 @@ export class UploadController {
                 destination: './uploads/profiles',
                 filename: (req, file, callback) => {
                     // Generar nombre único: uuid + extensión original
-                    const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
+                    const uniqueName = `${randomUUID()}${extname(file.originalname)}`;
                     callback(null, uniqueName);
                 },
             }),
