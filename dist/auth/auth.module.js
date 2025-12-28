@@ -14,7 +14,9 @@ const typeorm_1 = require("@nestjs/typeorm");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
-const entities_1 = require("../users/entities");
+const user_entity_1 = require("../users/entities/user.entity");
+const client_entity_1 = require("../clients/client.entity");
+const lawyer_entity_1 = require("../lawyers/lawyer.entity");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -26,7 +28,7 @@ exports.AuthModule = AuthModule = __decorate([
                 secret: process.env.JWT_SECRET || 'tu_clave_secreta_super_segura_cambiame_en_produccion',
                 signOptions: { expiresIn: '7d' },
             }),
-            typeorm_1.TypeOrmModule.forFeature([entities_1.User, entities_1.Client, entities_1.Lawyer]),
+            typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, client_entity_1.Client, lawyer_entity_1.Lawyer]),
         ],
         controllers: [auth_controller_1.AuthController],
         providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],

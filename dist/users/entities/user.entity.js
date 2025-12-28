@@ -13,6 +13,8 @@ exports.User = void 0;
 const typeorm_1 = require("typeorm");
 const bcrypt = require("bcrypt");
 const user_constants_1 = require("../../common/constants/user.constants");
+const client_entity_1 = require("../../clients/client.entity");
+const lawyer_entity_1 = require("../../lawyers/lawyer.entity");
 let User = class User {
     async hashPassword() {
         if (this.password) {
@@ -80,6 +82,14 @@ __decorate([
     __metadata("design:type", Date)
 ], User.prototype, "updatedAt", void 0);
 __decorate([
+    (0, typeorm_1.OneToOne)(() => client_entity_1.Client, (client) => client.user, { nullable: true }),
+    __metadata("design:type", client_entity_1.Client)
+], User.prototype, "client", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => lawyer_entity_1.Lawyer, (lawyer) => lawyer.user, { nullable: true }),
+    __metadata("design:type", lawyer_entity_1.Lawyer)
+], User.prototype, "lawyer", void 0);
+__decorate([
     (0, typeorm_1.BeforeInsert)(),
     (0, typeorm_1.BeforeUpdate)(),
     __metadata("design:type", Function),
@@ -87,7 +97,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], User.prototype, "hashPassword", null);
 exports.User = User = __decorate([
-    (0, typeorm_1.Entity)('users'),
-    (0, typeorm_1.TableInheritance)({ column: { type: 'varchar', name: 'role' } })
+    (0, typeorm_1.Entity)('users')
 ], User);
 //# sourceMappingURL=user.entity.js.map

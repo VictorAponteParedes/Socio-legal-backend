@@ -1,6 +1,6 @@
 import { IsEmail, IsString, IsNotEmpty, MinLength, IsEnum, IsOptional } from 'class-validator';
-import { UserRole } from '../../common/constants/user.constants';
-import { IsLicenseRequired } from '../../common/validators/is-license-required.validator';
+import { UserRole } from '@/common/constants/user.constants';
+import { IsLicenseRequired } from '@/common/validators/is-license-required.validator';
 
 export class RegisterDto {
     @IsNotEmpty({ message: 'El nombre es obligatorio' })

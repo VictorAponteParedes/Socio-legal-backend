@@ -7,10 +7,12 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User, Client, Lawyer } from '../users/entities';
+import { User } from '@/users/entities/user.entity';
+import { Client } from '@/clients/client.entity';
+import { Lawyer } from '@/lawyers/lawyer.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { UserRole } from '../common/constants/user.constants';
+import { UserRole } from '@/common/constants/user.constants';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +27,7 @@ export class AuthService {
     ) { }
 
     async register(registerDto: RegisterDto) {
-        // Check if user already exists
+        // Verificar si el email ya existe
         const existingUser = await this.userRepository.findOne({
             where: { email: registerDto.email },
         });
@@ -34,13 +36,13 @@ export class AuthService {
             throw new ConflictException('El correo ya está registrado');
         }
 
-        // Validate license for lawyers
+        // Validar license para abogados
         if (registerDto.role === UserRole.LAWYER) {
             if (!registerDto.license) {
                 throw new BadRequestException('La matrícula es obligatoria para abogados');
             }
 
-            // Check if license is already used
+            // Verificar si la matrícula ya existe
             const existingLawyer = await this.lawyerRepository.findOne({
                 where: { license: registerDto.license },
             });
@@ -50,35 +52,38 @@ export class AuthService {
             }
         }
 
-        // Create user based on role
-        let newUser: User;
+        // Crear usuario base
+        const user = this.userRepository.create({
+            name: registerDto.name,
+            lastname: registerDto.lastname,
+            email: registerDto.email,
+            password: registerDto.password,
+            role: registerDto.role,
+        });
 
+        const savedUser = await this.userRepository.save(user);
+
+        // Crear perfil específico según el rol
         if (registerDto.role === UserRole.CLIENT) {
-            newUser = this.clientRepository.create({
-                name: registerDto.name,
-                lastname: registerDto.lastname,
-                email: registerDto.email,
-                password: registerDto.password,
-                role: UserRole.CLIENT,
+            const client = this.clientRepository.create({
+                user_id: savedUser.id,
+                user: savedUser,
             });
-            await this.clientRepository.save(newUser);
-        } else {
-            newUser = this.lawyerRepository.create({
-                name: registerDto.name,
-                lastname: registerDto.lastname,
-                email: registerDto.email,
-                password: registerDto.password,
-                license: registerDto.license,
-                role: UserRole.LAWYER,
+            await this.clientRepository.save(client);
+        } else if (registerDto.role === UserRole.LAWYER) {
+            const lawyer = this.lawyerRepository.create({
+                user_id: savedUser.id,
+                user: savedUser,
+                license: registerDto.license!,
             });
-            await this.lawyerRepository.save(newUser);
+            await this.lawyerRepository.save(lawyer);
         }
 
-        // Generate JWT token
-        const token = this.generateToken(newUser);
+        // Generar token
+        const token = this.generateToken(savedUser);
 
-        // Remove password from response
-        const { password, ...userWithoutPassword } = newUser;
+        // Retornar respuesta sin password
+        const { password, ...userWithoutPassword } = savedUser;
 
         return {
             message: 'Usuario registrado exitosamente',
@@ -88,7 +93,7 @@ export class AuthService {
     }
 
     async login(loginDto: LoginDto) {
-        // Find user by email (include password for validation)
+        // Buscar usuario con password
         const user = await this.userRepository.findOne({
             where: { email: loginDto.email },
             select: ['id', 'email', 'password', 'name', 'lastname', 'role', 'status'],
@@ -98,17 +103,17 @@ export class AuthService {
             throw new UnauthorizedException('Credenciales incorrectas');
         }
 
-        // Validate password
+        // Validar password
         const isPasswordValid = await user.validatePassword(loginDto.password);
 
         if (!isPasswordValid) {
             throw new UnauthorizedException('Credenciales incorrectas');
         }
 
-        // Generate JWT token
+        // Generar token
         const token = this.generateToken(user);
 
-        // Remove password from response
+        // Retornar sin password
         const { password, ...userWithoutPassword } = user;
 
         return {

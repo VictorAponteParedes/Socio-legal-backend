@@ -1,9 +1,11 @@
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
-import { User, Client, Lawyer } from '../users/entities';
+import { User } from '@/users/entities/user.entity';
+import { Client } from '@/clients/client.entity';
+import { Lawyer } from '@/lawyers/lawyer.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { UserRole } from '../common/constants/user.constants';
+import { UserRole } from '@/common/constants/user.constants';
 export declare class AuthService {
     private readonly userRepository;
     private readonly clientRepository;
@@ -18,11 +20,13 @@ export declare class AuthService {
             lastname: string;
             email: string;
             role: UserRole;
-            status: import("../common/constants/user.constants").UserStatus;
+            status: import("@/common/constants/user.constants").UserStatus;
             profilePicture?: string;
             phone?: string;
             createdAt: Date;
             updatedAt: Date;
+            client?: Client;
+            lawyer?: Lawyer;
         };
         token: string;
     }>;
@@ -34,11 +38,13 @@ export declare class AuthService {
             lastname: string;
             email: string;
             role: UserRole;
-            status: import("../common/constants/user.constants").UserStatus;
+            status: import("@/common/constants/user.constants").UserStatus;
             profilePicture?: string;
             phone?: string;
             createdAt: Date;
             updatedAt: Date;
+            client?: Client;
+            lawyer?: Lawyer;
         };
         token: string;
     }>;

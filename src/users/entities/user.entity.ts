@@ -4,16 +4,17 @@ import {
     Column,
     CreateDateColumn,
     UpdateDateColumn,
-    TableInheritance,
     BeforeInsert,
     BeforeUpdate,
+    OneToOne,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { UserRole, UserStatus } from '../../common/constants/user.constants';
+import { UserRole, UserStatus } from '@/common/constants/user.constants';
+import { Client } from '@/clients/client.entity';
+import { Lawyer } from '@/lawyers/lawyer.entity';
 
 @Entity('users')
-@TableInheritance({ column: { type: 'varchar', name: 'role' } })
-export abstract class User {
+export class User {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
@@ -54,6 +55,14 @@ export abstract class User {
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt: Date;
 
+    // Relaciones
+    @OneToOne(() => Client, (client) => client.user, { nullable: true })
+    client?: Client;
+
+    @OneToOne(() => Lawyer, (lawyer) => lawyer.user, { nullable: true })
+    lawyer?: Lawyer;
+
+    // Métodos
     @BeforeInsert()
     @BeforeUpdate()
     async hashPassword() {
@@ -67,7 +76,6 @@ export abstract class User {
         return bcrypt.compare(password, this.password);
     }
 
-    // Method to get full name
     getFullName(): string {
         return `${this.name} ${this.lastname}`;
     }

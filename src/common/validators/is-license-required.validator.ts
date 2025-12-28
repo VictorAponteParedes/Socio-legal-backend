@@ -5,7 +5,7 @@ import {
     ValidatorConstraintInterface,
     ValidationArguments,
 } from 'class-validator';
-import { UserRole } from '../constants/user.constants';
+import { UserRole } from '@/common/constants/user.constants';
 
 @ValidatorConstraint({ async: false })
 export class IsLicenseRequiredConstraint implements ValidatorConstraintInterface {

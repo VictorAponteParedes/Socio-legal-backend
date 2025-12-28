@@ -17,7 +17,9 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const entities_1 = require("../users/entities");
+const user_entity_1 = require("../users/entities/user.entity");
+const client_entity_1 = require("../clients/client.entity");
+const lawyer_entity_1 = require("../lawyers/lawyer.entity");
 const user_constants_1 = require("../common/constants/user.constants");
 let AuthService = class AuthService {
     constructor(userRepository, clientRepository, lawyerRepository, jwtService) {
@@ -44,30 +46,31 @@ let AuthService = class AuthService {
                 throw new common_1.ConflictException('La matrícula ya está registrada');
             }
         }
-        let newUser;
+        const user = this.userRepository.create({
+            name: registerDto.name,
+            lastname: registerDto.lastname,
+            email: registerDto.email,
+            password: registerDto.password,
+            role: registerDto.role,
+        });
+        const savedUser = await this.userRepository.save(user);
         if (registerDto.role === user_constants_1.UserRole.CLIENT) {
-            newUser = this.clientRepository.create({
-                name: registerDto.name,
-                lastname: registerDto.lastname,
-                email: registerDto.email,
-                password: registerDto.password,
-                role: user_constants_1.UserRole.CLIENT,
+            const client = this.clientRepository.create({
+                user_id: savedUser.id,
+                user: savedUser,
             });
-            await this.clientRepository.save(newUser);
+            await this.clientRepository.save(client);
         }
-        else {
-            newUser = this.lawyerRepository.create({
-                name: registerDto.name,
-                lastname: registerDto.lastname,
-                email: registerDto.email,
-                password: registerDto.password,
+        else if (registerDto.role === user_constants_1.UserRole.LAWYER) {
+            const lawyer = this.lawyerRepository.create({
+                user_id: savedUser.id,
+                user: savedUser,
                 license: registerDto.license,
-                role: user_constants_1.UserRole.LAWYER,
             });
-            await this.lawyerRepository.save(newUser);
+            await this.lawyerRepository.save(lawyer);
         }
-        const token = this.generateToken(newUser);
-        const { password, ...userWithoutPassword } = newUser;
+        const token = this.generateToken(savedUser);
+        const { password, ...userWithoutPassword } = savedUser;
         return {
             message: 'Usuario registrado exitosamente',
             user: userWithoutPassword,
@@ -115,9 +118,9 @@ let AuthService = class AuthService {
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(entities_1.User)),
-    __param(1, (0, typeorm_1.InjectRepository)(entities_1.Client)),
-    __param(2, (0, typeorm_1.InjectRepository)(entities_1.Lawyer)),
+    __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(1, (0, typeorm_1.InjectRepository)(client_entity_1.Client)),
+    __param(2, (0, typeorm_1.InjectRepository)(lawyer_entity_1.Lawyer)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

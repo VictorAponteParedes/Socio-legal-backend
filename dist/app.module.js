@@ -13,8 +13,12 @@ const typeorm_1 = require("@nestjs/typeorm");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const auth_module_1 = require("./auth/auth.module");
+const specializations_module_1 = require("./specializations/specializations.module");
 const env_config_1 = require("./config/env.config");
-const entities_1 = require("./users/entities");
+const user_entity_1 = require("./users/entities/user.entity");
+const client_entity_1 = require("./clients/client.entity");
+const lawyer_entity_1 = require("./lawyers/lawyer.entity");
+const specialization_entity_1 = require("./specializations/specialization.entity");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -32,11 +36,12 @@ exports.AppModule = AppModule = __decorate([
                 username: process.env.DB_USERNAME || 'victoraponte',
                 password: process.env.DB_PASSWORD || 'Admin123.',
                 database: process.env.DB_DATABASE || 'socio_legal',
-                entities: [entities_1.User, entities_1.Client, entities_1.Lawyer],
+                entities: [user_entity_1.User, client_entity_1.Client, lawyer_entity_1.Lawyer, specialization_entity_1.Specialization],
                 synchronize: process.env.DB_SYNCHRONIZE === 'true',
                 logging: process.env.DB_LOGGING === 'true',
             }),
             auth_module_1.AuthModule,
+            specializations_module_1.SpecializationsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

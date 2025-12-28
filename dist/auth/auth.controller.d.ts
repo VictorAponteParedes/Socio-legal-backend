@@ -17,6 +17,8 @@ export declare class AuthController {
             phone?: string;
             createdAt: Date;
             updatedAt: Date;
+            client?: import("../clients/client.entity").Client;
+            lawyer?: import("../lawyers/lawyer.entity").Lawyer;
         };
         token: string;
     }>;
@@ -33,6 +35,8 @@ export declare class AuthController {
             phone?: string;
             createdAt: Date;
             updatedAt: Date;
+            client?: import("../clients/client.entity").Client;
+            lawyer?: import("../lawyers/lawyer.entity").Lawyer;
         };
         token: string;
     }>;

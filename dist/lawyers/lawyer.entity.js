@@ -11,11 +11,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lawyer = void 0;
 const typeorm_1 = require("typeorm");
-const user_entity_1 = require("./user.entity");
-const user_constants_1 = require("../../common/constants/user.constants");
-let Lawyer = class Lawyer extends user_entity_1.User {
+const user_entity_1 = require("../users/entities/user.entity");
+let Lawyer = class Lawyer {
 };
 exports.Lawyer = Lawyer;
+__decorate([
+    (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
+    __metadata("design:type", String)
+], Lawyer.prototype, "id", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => user_entity_1.User, (user) => user.lawyer, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
+    __metadata("design:type", user_entity_1.User)
+], Lawyer.prototype, "user", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'uuid' }),
+    __metadata("design:type", String)
+], Lawyer.prototype, "user_id", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 100, unique: true }),
     __metadata("design:type", String)
@@ -41,8 +53,8 @@ __decorate([
     __metadata("design:type", Number)
 ], Lawyer.prototype, "totalReviews", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
-    __metadata("design:type", String)
+    (0, typeorm_1.Column)({ type: 'simple-array', nullable: true }),
+    __metadata("design:type", Array)
 ], Lawyer.prototype, "languages", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'boolean', default: true }),
@@ -60,7 +72,15 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 100, nullable: true }),
     __metadata("design:type", String)
 ], Lawyer.prototype, "country", void 0);
+__decorate([
+    (0, typeorm_1.CreateDateColumn)({ type: 'timestamp' }),
+    __metadata("design:type", Date)
+], Lawyer.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.UpdateDateColumn)({ type: 'timestamp' }),
+    __metadata("design:type", Date)
+], Lawyer.prototype, "updatedAt", void 0);
 exports.Lawyer = Lawyer = __decorate([
-    (0, typeorm_1.ChildEntity)(user_constants_1.UserRole.LAWYER)
+    (0, typeorm_1.Entity)('lawyers')
 ], Lawyer);
 //# sourceMappingURL=lawyer.entity.js.map
