@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Lawyer = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../users/entities/user.entity");
+const specialization_entity_1 = require("../specializations/specialization.entity");
 let Lawyer = class Lawyer {
 };
 exports.Lawyer = Lawyer;
@@ -37,7 +38,12 @@ __decorate([
     __metadata("design:type", String)
 ], Lawyer.prototype, "bio", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'simple-array', nullable: true }),
+    (0, typeorm_1.ManyToMany)(() => specialization_entity_1.Specialization, { eager: false }),
+    (0, typeorm_1.JoinTable)({
+        name: 'lawyer_specializations',
+        joinColumn: { name: 'lawyer_id', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'specialization_id', referencedColumnName: 'id' },
+    }),
     __metadata("design:type", Array)
 ], Lawyer.prototype, "specializations", void 0);
 __decorate([
@@ -72,6 +78,10 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'varchar', length: 100, nullable: true }),
     __metadata("design:type", String)
 ], Lawyer.prototype, "country", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], Lawyer.prototype, "profileCompleted", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ type: 'timestamp' }),
     __metadata("design:type", Date)

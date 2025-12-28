@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { SpecializationsModule } from './specializations/specializations.module';
+import { LawyersModule } from './lawyers/lawyers.module';
 import { envConfig } from '@/config/env.config';
 import { User } from '@/users/entities/user.entity';
 import { Client } from '@/clients/client.entity';
@@ -35,6 +36,7 @@ import { Specialization } from '@/specializations/specialization.entity';
     // Feature Modules
     AuthModule,
     SpecializationsModule,
+    LawyersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

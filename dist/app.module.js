@@ -14,6 +14,7 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const auth_module_1 = require("./auth/auth.module");
 const specializations_module_1 = require("./specializations/specializations.module");
+const lawyers_module_1 = require("./lawyers/lawyers.module");
 const env_config_1 = require("./config/env.config");
 const user_entity_1 = require("./users/entities/user.entity");
 const client_entity_1 = require("./clients/client.entity");
@@ -42,6 +43,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             auth_module_1.AuthModule,
             specializations_module_1.SpecializationsModule,
+            lawyers_module_1.LawyersModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

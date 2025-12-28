@@ -6,15 +6,17 @@ import {
     UpdateDateColumn,
     OneToOne,
     JoinColumn,
+    ManyToMany,
+    JoinTable,
 } from 'typeorm';
 import { User } from '@/users/entities/user.entity';
+import { Specialization } from '@/specializations/specialization.entity';
 
 @Entity('lawyers')
 export class Lawyer {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    // Relación 1-1 con User
     @OneToOne(() => User, (user) => user.lawyer, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: User;
@@ -22,30 +24,34 @@ export class Lawyer {
     @Column({ type: 'uuid' })
     user_id: string;
 
-    // Campos específicos de Abogado
     @Column({ type: 'varchar', length: 100, unique: true })
-    license: string; // Matrícula profesional
+    license: string;
 
     @Column({ type: 'text', nullable: true })
     bio?: string;
 
-    @Column({ type: 'simple-array', nullable: true })
-    specializations?: string[]; // Array de IDs o nombres
+    @ManyToMany(() => Specialization, { eager: false })
+    @JoinTable({
+        name: 'lawyer_specializations',
+        joinColumn: { name: 'lawyer_id', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'specialization_id', referencedColumnName: 'id' },
+    })
+    specializations: Specialization[];
 
     @Column({ type: 'int', default: 0 })
     yearsOfExperience: number;
 
     @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
-    rating: number; // Rating promedio de 0 a 5
+    rating: number;
 
     @Column({ type: 'int', default: 0 })
     totalReviews: number;
 
     @Column({ type: 'simple-array', nullable: true })
-    languages?: string[]; // ['Español', 'Guaraní', 'Inglés']
+    languages?: string[];
 
     @Column({ type: 'boolean', default: true })
-    isAvailable: boolean; // Si acepta nuevos clientes
+    isAvailable: boolean;
 
     @Column({ type: 'text', nullable: true })
     officeAddress?: string;
@@ -55,6 +61,9 @@ export class Lawyer {
 
     @Column({ type: 'varchar', length: 100, nullable: true })
     country?: string;
+
+    @Column({ type: 'boolean', default: false })
+    profileCompleted: boolean;
 
     @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
