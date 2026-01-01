@@ -7,12 +7,11 @@ export class Specialization {
     id: number;
 
     @Column({ unique: true, length: 100 })
-    name: string; // ej: 'Derecho Civil'
+    name: string;
 
     @Column({ type: 'text', nullable: true })
-    description?: string; // Descripción de la especialización
+    description?: string;
 
-    // Relación Many-to-Many con Lawyers (lado inverso)
     @ManyToMany(() => Lawyer, (lawyer) => lawyer.specializations)
     lawyers: Lawyer[];
 
