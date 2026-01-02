@@ -9,4 +9,9 @@ export class CreateSpecializationDto {
     @IsOptional()
     @IsString()
     description?: string;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(50, { message: 'El ícono no puede exceder 50 caracteres' })
+    icon?: string;
 }

@@ -1,0 +1,77 @@
+[
+    {
+        "name": "Derecho Penal",
+        "description": "Defensa en casos criminales, delitos y faltas",
+        "icon": "shield-alert"
+    },
+    {
+        "name": "Derecho Civil",
+        "description": "Contratos, obligaciones, responsabilidad civil",
+        "icon": "file-document"
+    },
+    {
+        "name": "Derecho Laboral",
+        "description": "Relaciones laborales, despidos, indemnizaciones",
+        "icon": "briefcase"
+    },
+    {
+        "name": "Derecho Familia",
+        "description": "Divorcios, custodias, pensiones alimenticias",
+        "icon": "home-heart"
+    },
+    {
+        "name": "Derecho Comercial",
+        "description": "Sociedades, contratos mercantiles, quiebras",
+        "icon": "store"
+    },
+    {
+        "name": "Derecho Tributario",
+        "description": "Impuestos, fiscalización, planificación tributaria",
+        "icon": "calculator"
+    },
+    {
+        "name": "Derecho Inmobiliario",
+        "description": "Compra-venta, arrendamientos, propiedades",
+        "icon": "home"
+    },
+    {
+        "name": "Derecho Administrativo",
+        "description": "Procedimientos con el Estado, licitaciones",
+        "icon": "office-building"
+    },
+    {
+        "name": "Derecho Constitucional",
+        "description": "Amparos, recursos de inconstitucionalidad",
+        "icon": "gavel"
+    },
+    {
+        "name": "Derecho del Consumidor",
+        "description": "Protección al consumidor, garantías, reclamos",
+        "icon": "shopping"
+    },
+    {
+        "name": "Derecho Migratorio",
+        "description": "Visas, residencias, nacionalizaciones",
+        "icon": "passport"
+    },
+    {
+        "name": "Derecho Ambiental",
+        "description": "Protección ambiental, licencias, sanciones",
+        "icon": "tree"
+    },
+    {
+        "name": "Derecho Tecnológico",
+        "description": "Protección de datos, propiedad intelectual, cibercrimen",
+        "icon": "laptop"
+    },
+    {
+        "name": "Derecho Sucesorio",
+        "description": "Herencias, testamentos, declaratorias de herederos",
+        "icon": "account-multiple"
+    },
+    {
+        "name": "Derecho Bancario",
+        "description": "Créditos, hipotecas, refinanciaciones",
+        "icon": "bank"
+    }
+]

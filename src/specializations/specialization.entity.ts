@@ -12,6 +12,9 @@ export class Specialization {
     @Column({ type: 'text', nullable: true })
     description?: string;
 
+    @Column({ length: 50, nullable: true })
+    icon?: string;
+
     @ManyToMany(() => Lawyer, (lawyer) => lawyer.specializations)
     lawyers: Lawyer[];
 
