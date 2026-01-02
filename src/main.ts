@@ -33,7 +33,7 @@ async function bootstrap() {
 
   console.log(`🚀 Application is running on:`);
   console.log(`   - Local:    http://localhost:${port}/api`);
-  console.log(`   - Network:  http://192.168.22.173:${port}/api`);
+  console.log(`   - Network:  http://192.168.0.7:${port}/api`);
   console.log(`   - Android:  http://10.0.2.2:${port}/api`);
 }
 bootstrap();

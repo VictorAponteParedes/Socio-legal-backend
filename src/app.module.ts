@@ -34,6 +34,7 @@ import { Specialization } from '@/specializations/specialization.entity';
       entities: [User, Client, Lawyer, Specialization],
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.DB_LOGGING === 'true',
+      ssl: process.env.DB_HOST?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
     }),
 
     // Serve Static Files (para servir imágenes subidas)
