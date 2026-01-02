@@ -15,7 +15,7 @@ import { CreateProposalDto } from './dto/create-proposal.dto';
 @Controller('cases')
 @UseGuards(JwtAuthGuard)
 export class CasesController {
-  constructor(private readonly casesService: CasesService) {}
+  constructor(private readonly casesService: CasesService) { }
 
   @Post()
   create(@Request() req, @Body() createCaseDto: CreateCaseDto) {
@@ -33,8 +33,8 @@ export class CasesController {
   }
 
   @Get('available')
-  findAvailable() {
-    return this.casesService.findAvailableCases();
+  findAvailable(@Request() req) {
+    return this.casesService.findAvailableCases(req.user?.userId);
   }
 
   @Get(':id')

@@ -20,7 +20,7 @@ export class CasesService {
     private proposalRepository: Repository<CaseProposal>,
     @InjectRepository(Lawyer)
     private lawyerRepository: Repository<Lawyer>,
-  ) {}
+  ) { }
 
   async create(clientId: string, createCaseDto: CreateCaseDto) {
     const newCase = this.caseRepository.create({
@@ -45,12 +45,22 @@ export class CasesService {
     });
   }
 
-  async findAvailableCases() {
-    return await this.caseRepository.find({
-      where: { status: 'pendiente' },
-      relations: ['client'],
-      order: { createdAt: 'DESC' },
-    });
+  async findAvailableCases(userId?: string) {
+    const qb = this.caseRepository.createQueryBuilder('case')
+      .leftJoinAndSelect('case.client', 'client')
+      .leftJoinAndSelect('case.proposals', 'proposals')
+      .leftJoinAndSelect('proposals.lawyer', 'lawyer')
+      .leftJoinAndSelect('lawyer.user', 'user')
+      .orderBy('case.createdAt', 'DESC');
+
+    if (userId) {
+      qb.where('case.status = :status', { status: 'pendiente' })
+        .orWhere('user.id = :userId', { userId });
+    } else {
+      qb.where('case.status = :status', { status: 'pendiente' });
+    }
+
+    return await qb.getMany();
   }
 
   async findOne(id: number) {
