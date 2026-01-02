@@ -14,6 +14,7 @@ import { User } from '@/users/entities/user.entity';
 import { Client } from '@/clients/client.entity';
 import { Lawyer } from '@/lawyers/lawyer.entity';
 import { Specialization } from '@/specializations/specialization.entity';
+import { PasswordResetCode } from '@/auth/entities/password-reset-code.entity';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { Specialization } from '@/specializations/specialization.entity';
       username: process.env.DB_USERNAME || 'victoraponte',
       password: process.env.DB_PASSWORD || 'Admin123.',
       database: process.env.DB_DATABASE || 'socio_legal',
-      entities: [User, Client, Lawyer, Specialization],
+      entities: [User, Client, Lawyer, Specialization, PasswordResetCode],
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.DB_LOGGING === 'true',
       ssl: process.env.DB_HOST?.includes('neon.tech') ? { rejectUnauthorized: false } : false,

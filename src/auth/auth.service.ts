@@ -3,16 +3,22 @@ import {
     BadRequestException,
     UnauthorizedException,
     ConflictException,
+    NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThan } from 'typeorm';
 import { User } from '@/users/entities/user.entity';
 import { Client } from '@/clients/client.entity';
 import { Lawyer } from '@/lawyers/lawyer.entity';
+import { PasswordResetCode } from './entities/password-reset-code.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyCodeDto } from './dto/verify-code.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserRole } from '@/common/constants/user.constants';
+import { EmailService } from './services/email.service';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +29,10 @@ export class AuthService {
         private readonly clientRepository: Repository<Client>,
         @InjectRepository(Lawyer)
         private readonly lawyerRepository: Repository<Lawyer>,
+        @InjectRepository(PasswordResetCode)
+        private readonly passwordResetCodeRepository: Repository<PasswordResetCode>,
         private readonly jwtService: JwtService,
+        private readonly emailService: EmailService,
     ) { }
 
     async register(registerDto: RegisterDto) {
@@ -143,5 +152,120 @@ export class AuthService {
         };
 
         return this.jwtService.sign(payload);
+    }
+
+    // ========================
+    // PASSWORD RESET METHODS
+    // ========================
+
+    async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+        const user = await this.userRepository.findOne({
+            where: { email: forgotPasswordDto.email },
+        });
+
+        if (!user) {
+            // Por seguridad, no revelar si el email existe o no
+            return {
+                message: 'Si el correo existe, recibirás un código de verificación',
+            };
+        }
+
+        // Generar código de 6 dígitos
+        const code = this.generateResetCode();
+
+        // Calcular fecha de expiración (15 minutos)
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+        // Guardar código en la base de datos
+        const resetCode = this.passwordResetCodeRepository.create({
+            userId: user.id,
+            code,
+            expiresAt,
+            used: false,
+        });
+
+        await this.passwordResetCodeRepository.save(resetCode);
+
+        // Enviar email con código
+        await this.emailService.sendPasswordResetCode(
+            user.email,
+            code,
+            user.name,
+        );
+
+        return {
+            message: 'Si el correo existe, recibirás un código de verificación',
+        };
+    }
+
+    async verifyCode(verifyCodeDto: VerifyCodeDto) {
+        const user = await this.userRepository.findOne({
+            where: { email: verifyCodeDto.email },
+        });
+
+        if (!user) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+
+        // Buscar código válido (no usado y no expirado)
+        const resetCode = await this.passwordResetCodeRepository.findOne({
+            where: {
+                userId: user.id,
+                code: verifyCodeDto.code,
+                used: false,
+                expiresAt: MoreThan(new Date()),
+            },
+        });
+
+        if (!resetCode) {
+            throw new BadRequestException('Código inválido o expirado');
+        }
+
+        return {
+            message: 'Código verificado correctamente',
+            valid: true,
+        };
+    }
+
+    async resetPassword(resetPasswordDto: ResetPasswordDto) {
+        const user = await this.userRepository.findOne({
+            where: { email: resetPasswordDto.email },
+        });
+
+        if (!user) {
+            throw new NotFoundException('Usuario no encontrado');
+        }
+
+        // Verificar código nuevamente
+        const resetCode = await this.passwordResetCodeRepository.findOne({
+            where: {
+                userId: user.id,
+                code: resetPasswordDto.code,
+                used: false,
+                expiresAt: MoreThan(new Date()),
+            },
+        });
+
+        if (!resetCode) {
+            throw new BadRequestException('Código inválido o expirado');
+        }
+
+        // Actualizar contraseña
+        user.password = resetPasswordDto.newPassword;
+        await this.userRepository.save(user);
+
+        // Marcar código como usado
+        resetCode.used = true;
+        await this.passwordResetCodeRepository.save(resetCode);
+
+        return {
+            message: 'Contraseña actualizada exitosamente',
+        };
+    }
+
+    private generateResetCode(): string {
+        // Generar código numérico de 6 dígitos
+        return Math.floor(100000 + Math.random() * 900000).toString();
     }
 }
