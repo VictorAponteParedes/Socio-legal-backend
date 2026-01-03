@@ -42,7 +42,7 @@ export class CasesService {
   async findByClient(clientId: string) {
     return await this.caseRepository.find({
       where: { clientId },
-      relations: ['assignedLawyer', 'proposals'],
+      relations: ['assignedLawyer', 'proposals', 'proposals.lawyer', 'proposals.lawyer.user'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -68,7 +68,7 @@ export class CasesService {
   async findOne(id: number) {
     const caseEntity = await this.caseRepository.findOne({
       where: { id },
-      relations: ['client', 'assignedLawyer', 'proposals', 'proposals.lawyer'],
+      relations: ['client', 'assignedLawyer', 'proposals', 'proposals.lawyer', 'proposals.lawyer.user'],
     });
 
     if (!caseEntity) {
