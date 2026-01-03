@@ -10,6 +10,7 @@ import { SpecializationsModule } from './specializations/specializations.module'
 import { LawyersModule } from './lawyers/lawyers.module';
 import { UploadModule } from './upload/upload.module';
 import { CasesModule } from './cases/cases.module';
+import { NotificationsModule } from '@/notifications/notifications.module';
 import { envConfig } from '@/config/env.config';
 import { User } from '@/users/entities/user.entity';
 import { Client } from '@/clients/client.entity';
@@ -51,6 +52,7 @@ import { CaseProposal } from '@/cases/entities/case-proposal.entity';
     LawyersModule,
     UploadModule,
     CasesModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
