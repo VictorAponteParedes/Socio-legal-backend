@@ -26,8 +26,10 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.4.20",
     "@nestjs/serve-static": "^5.0.4",
     "@nestjs/typeorm": "^11.0.0",
+    "@nestjs/websockets": "^10.4.20",
     "@types/multer": "^2.0.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
@@ -40,6 +42,7 @@
     "reflect-metadata": "^0.2.0",
     "resend": "^6.4.2",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.8.3",
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
