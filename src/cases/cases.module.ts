@@ -8,8 +8,13 @@ import { CaseProposal } from './entities/case-proposal.entity';
 import { Lawyer } from '@/lawyers/lawyer.entity';
 import { User } from '@/users/entities/user.entity';
 
+import { NotificationsModule } from '@/notifications/notifications.module';
+
 @Module({
-    imports: [TypeOrmModule.forFeature([Case, CaseProposal, Lawyer, User])],
+    imports: [
+        TypeOrmModule.forFeature([Case, CaseProposal, Lawyer, User]),
+        NotificationsModule
+    ],
     controllers: [CasesController],
     providers: [CasesService],
     exports: [CasesService],

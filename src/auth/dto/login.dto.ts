@@ -1,4 +1,4 @@
-import { IsEmail, IsString, IsNotEmpty, MinLength } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty, MinLength, IsOptional } from 'class-validator';
 
 export class LoginDto {
     @IsNotEmpty({ message: 'El correo es requerido' })
@@ -9,4 +9,8 @@ export class LoginDto {
     @IsString()
     @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
     password: string;
+
+    @IsOptional()
+    @IsString()
+    fcmToken?: string;
 }

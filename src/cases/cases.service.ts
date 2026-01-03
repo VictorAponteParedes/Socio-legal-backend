@@ -10,6 +10,7 @@ import { CaseProposal } from './entities/case-proposal.entity';
 import { CreateCaseDto } from './dto/create-case.dto';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { Lawyer } from '@/lawyers/lawyer.entity';
+import { NotificationsService } from '@/notifications/notifications.service';
 
 @Injectable()
 export class CasesService {
@@ -20,6 +21,7 @@ export class CasesService {
     private proposalRepository: Repository<CaseProposal>,
     @InjectRepository(Lawyer)
     private lawyerRepository: Repository<Lawyer>,
+    private readonly notificationsService: NotificationsService,
   ) { }
 
   async create(clientId: string, createCaseDto: CreateCaseDto) {
@@ -89,6 +91,7 @@ export class CasesService {
 
     let lawyer = await this.lawyerRepository.findOne({
       where: { user_id: userId },
+      relations: ['user']
     });
 
     if (!lawyer) {
@@ -114,7 +117,26 @@ export class CasesService {
       lawyerId: lawyer.id,
     });
 
-    return await this.proposalRepository.save(proposal);
+    const savedProposal = await this.proposalRepository.save(proposal);
+
+    if (caseEntity.client && caseEntity.client.fcmToken) {
+      const lawyerName = lawyer.user ? `${lawyer.user.name} ${lawyer.user.lastname}` : 'Un abogado';
+
+      await this.notificationsService.sendPushNotification(
+        caseEntity.client.fcmToken,
+        '¡Nueva Propuesta Recibida! ⚖️',
+        `${lawyerName} ha enviado una propuesta para tu caso "${caseEntity.title}". Toca para ver detalles.`,
+        {
+          type: 'info',
+          screen: 'ClientMyCases',
+          caseId: caseId.toString(),
+          proposalId: savedProposal.id.toString(),
+          sentTime: new Date().toISOString()
+        }
+      );
+    }
+
+    return savedProposal;
   }
 
   async acceptProposal(caseId: number, proposalId: number, clientId: string) {

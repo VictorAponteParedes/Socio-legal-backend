@@ -119,6 +119,13 @@ export class AuthService {
             throw new UnauthorizedException('Credenciales incorrectas');
         }
 
+        // Si viene el fcmToken, lo actualizamos
+        if (loginDto.fcmToken) {
+            await this.userRepository.update(user.id, {
+                fcmToken: loginDto.fcmToken
+            });
+        }
+
         // Generar token
         const token = this.generateToken(user);
 

@@ -49,6 +49,9 @@ export class User {
     @Column({ type: 'varchar', length: 20, nullable: true })
     phone?: string;
 
+    @Column({ type: 'varchar', nullable: true })
+    fcmToken?: string;
+
     @CreateDateColumn({ type: 'timestamp' })
     createdAt: Date;
 
