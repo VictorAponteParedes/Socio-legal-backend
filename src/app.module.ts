@@ -19,6 +19,9 @@ import { Specialization } from '@/specializations/specialization.entity';
 import { PasswordResetCode } from '@/auth/entities/password-reset-code.entity';
 import { Case } from '@/cases/entities/case.entity';
 import { CaseProposal } from '@/cases/entities/case-proposal.entity';
+import { ChatModule } from '@/chat/chat.module';
+import { Chat } from '@/chat/entities/chat.entity';
+import { Message } from '@/chat/entities/message.entity';
 
 @Module({
   imports: [
@@ -36,7 +39,10 @@ import { CaseProposal } from '@/cases/entities/case-proposal.entity';
       username: process.env.DB_USERNAME || 'victoraponte',
       password: process.env.DB_PASSWORD || 'Admin123.',
       database: process.env.DB_DATABASE || 'socio_legal',
-      entities: [User, Client, Lawyer, Specialization, PasswordResetCode, Case, CaseProposal],
+      entities: [
+        User, Client, Lawyer, Specialization, PasswordResetCode, Case, CaseProposal,
+        Chat, Message // Added Chat and Message
+      ],
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.DB_LOGGING === 'true',
       ssl: process.env.DB_HOST?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
@@ -53,6 +59,7 @@ import { CaseProposal } from '@/cases/entities/case-proposal.entity';
     UploadModule,
     CasesModule,
     NotificationsModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
