@@ -17,6 +17,10 @@ yarn-error.log*
 .env.*.local
 .env.development
 .env.production
+serviceAccountKey.json
+.env.*.local
+.env.development
+.env.production
 
 # IDE
 .vscode/
