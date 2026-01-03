@@ -28,6 +28,9 @@ import { Message } from '@/chat/entities/message.entity';
     // Config Module
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: process.env.NODE_ENV === 'production'
+        ? '.env.production'
+        : '.env.development',
       load: [envConfig],
     }),
 
