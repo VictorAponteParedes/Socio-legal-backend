@@ -7,11 +7,14 @@ export class EmailService {
     private transporter: nodemailer.Transporter;
 
     constructor(private configService: ConfigService) {
+        const password = this.configService.get<string>('EMAIL_PASSWORD');
+
         this.transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
                 user: this.configService.get<string>('EMAIL_USER'),
-                pass: this.configService.get<string>('EMAIL_PASSWORD'),
+                // Clean potential spaces from Google App Password
+                pass: password?.replace(/\s+/g, ''),
             },
         });
     }
