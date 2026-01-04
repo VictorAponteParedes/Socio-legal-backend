@@ -37,6 +37,11 @@ export class CasesController {
     return this.casesService.findAvailableCases(req.user?.userId);
   }
 
+  @Get('lawyer-cases')
+  findLawyerCases(@Request() req) {
+    return this.casesService.findByLawyer(req.user.userId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.casesService.findOne(+id);

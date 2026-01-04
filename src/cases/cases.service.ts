@@ -22,7 +22,7 @@ export class CasesService {
     @InjectRepository(Lawyer)
     private lawyerRepository: Repository<Lawyer>,
     private readonly notificationsService: NotificationsService,
-  ) { }
+  ) {}
 
   async create(clientId: string, createCaseDto: CreateCaseDto) {
     const newCase = this.caseRepository.create({
@@ -42,13 +42,19 @@ export class CasesService {
   async findByClient(clientId: string) {
     return await this.caseRepository.find({
       where: { clientId },
-      relations: ['assignedLawyer', 'proposals', 'proposals.lawyer', 'proposals.lawyer.user'],
+      relations: [
+        'assignedLawyer',
+        'proposals',
+        'proposals.lawyer',
+        'proposals.lawyer.user',
+      ],
       order: { createdAt: 'DESC' },
     });
   }
 
   async findAvailableCases(userId?: string) {
-    const qb = this.caseRepository.createQueryBuilder('case')
+    const qb = this.caseRepository
+      .createQueryBuilder('case')
       .leftJoinAndSelect('case.client', 'client')
       .leftJoinAndSelect('case.proposals', 'proposals')
       .leftJoinAndSelect('proposals.lawyer', 'lawyer')
@@ -56,8 +62,10 @@ export class CasesService {
       .orderBy('case.createdAt', 'DESC');
 
     if (userId) {
-      qb.where('case.status = :status', { status: 'pendiente' })
-        .orWhere('user.id = :userId', { userId });
+      qb.where('case.status = :status', { status: 'pendiente' }).orWhere(
+        'user.id = :userId',
+        { userId },
+      );
     } else {
       qb.where('case.status = :status', { status: 'pendiente' });
     }
@@ -65,10 +73,45 @@ export class CasesService {
     return await qb.getMany();
   }
 
+  async findByLawyer(userId: string) {
+    const lawyer = await this.lawyerRepository.findOne({
+      where: { user: { id: userId } },
+    });
+
+    if (!lawyer) {
+      throw new NotFoundException('Lawyer profile not found');
+    }
+    const proposals = await this.proposalRepository.find({
+      where: { lawyer: { id: lawyer.id } },
+      relations: ['case', 'case.client', 'lawyer', 'lawyer.user'],
+      order: { createdAt: 'DESC' },
+    });
+
+    const casesMap = new Map();
+    proposals.forEach((proposal) => {
+      const caseId = proposal.case.id;
+      if (!casesMap.has(caseId)) {
+        casesMap.set(caseId, {
+          ...proposal.case,
+          myProposal: proposal,
+          proposals: [proposal],
+        });
+      }
+    });
+
+    return Array.from(casesMap.values());
+  }
+
   async findOne(id: number) {
     const caseEntity = await this.caseRepository.findOne({
       where: { id },
-      relations: ['client', 'assignedLawyer', 'proposals', 'proposals.lawyer', 'proposals.lawyer.user'],
+      relations: [
+        'client',
+        'assignedLawyer',
+        'proposals',
+        'proposals.lawyer',
+        'proposals.lawyer.user',
+      ],
     });
 
     if (!caseEntity) {
@@ -91,7 +134,7 @@ export class CasesService {
 
     let lawyer = await this.lawyerRepository.findOne({
       where: { user_id: userId },
-      relations: ['user']
+      relations: ['user'],
     });
 
     if (!lawyer) {
@@ -120,7 +163,9 @@ export class CasesService {
     const savedProposal = await this.proposalRepository.save(proposal);
 
     if (caseEntity.client && caseEntity.client.fcmToken) {
-      const lawyerName = lawyer.user ? `${lawyer.user.name} ${lawyer.user.lastname}` : 'Un abogado';
+      const lawyerName = lawyer.user
+        ? `${lawyer.user.name} ${lawyer.user.lastname}`
+        : 'Un abogado';
 
       await this.notificationsService.sendPushNotification(
         caseEntity.client.fcmToken,
@@ -131,8 +176,8 @@ export class CasesService {
           screen: 'ClientMyCases',
           caseId: caseId.toString(),
           proposalId: savedProposal.id.toString(),
-          sentTime: new Date().toISOString()
-        }
+          sentTime: new Date().toISOString(),
+        },
       );
     }
 
