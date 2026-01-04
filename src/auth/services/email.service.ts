@@ -1,26 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import { Resend } from 'resend';
 import { ConfigService } from '@nestjs/config';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
-    private resend: Resend;
+    private transporter: nodemailer.Transporter;
 
     constructor(private configService: ConfigService) {
-        const apiKey = this.configService.get<string>('RESEND_API_KEY');
-        this.resend = new Resend(apiKey);
+        this.transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: this.configService.get<string>('EMAIL_USER'),
+                pass: this.configService.get<string>('EMAIL_PASSWORD'),
+            },
+        });
     }
 
     async sendPasswordResetCode(email: string, code: string, userName: string): Promise<void> {
         try {
-            await this.resend.emails.send({
-                from: 'SocioLegal <onboarding@resend.dev>', // Email verificado en Resend
+            const fromEmail = this.configService.get<string>('EMAIL_USER');
+
+            console.log(`📧 Sending password reset email to: ${email}`);
+            console.log(`   From: ${fromEmail}`);
+            console.log(`   Code: ${code}`);
+
+            const mailOptions = {
+                from: `"SocioLegal" <${fromEmail}>`,
                 to: email,
                 subject: 'Código de Recuperación de Contraseña - SocioLegal',
                 html: this.getPasswordResetTemplate(code, userName),
-            });
+            };
+
+            await this.transporter.sendMail(mailOptions);
+
+            console.log(`✅ Email sent successfully to ${email}`);
         } catch (error) {
-            console.error('Error sending email:', error);
+            console.error('❌ Error sending email:', error);
+            console.error('   To:', email);
             throw new Error('No se pudo enviar el correo electrónico');
         }
     }
