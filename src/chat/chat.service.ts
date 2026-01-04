@@ -75,12 +75,28 @@ export class ChatService {
             where: {
                 case: { id: caseId }
             },
-            relations: ['messages', 'messages.sender', 'client', 'lawyer', 'case']
+            relations: ['messages', 'messages.sender', 'client', 'lawyer', 'lawyer.user', 'case']
         });
 
-        // If chat exists for this case, return it
+        // If chat exists for this case
         if (chat) {
             console.log(`📱 Found existing chat for case ${caseId}:`, chat.id);
+
+            // If chat exists but has no lawyer assigned, update it
+            if (!chat.lawyer && lawyerId) {
+                console.log(`🔧 Updating chat ${chat.id} to add lawyer ${lawyerId}`);
+                await this.chatRepository.update(chat.id, {
+                    lawyer: { id: lawyerId } as any
+                });
+
+                // Reload chat with updated lawyer
+                chat = await this.chatRepository.findOne({
+                    where: { id: chat.id },
+                    relations: ['messages', 'messages.sender', 'client', 'lawyer', 'lawyer.user', 'case']
+                });
+                console.log(`✅ Lawyer assigned to chat ${chat.id}`);
+            }
+
             return chat;
         }
 
@@ -89,10 +105,16 @@ export class ChatService {
         chat = this.chatRepository.create({
             case: { id: caseId } as any,
             client: { id: clientId } as any,
-            lawyer: { id: lawyerId } as any
+            lawyer: lawyerId ? { id: lawyerId } as any : null
         });
         await this.chatRepository.save(chat);
-        chat.messages = [];
+
+        // Reload with relations
+        chat = await this.chatRepository.findOne({
+            where: { id: chat.id },
+            relations: ['messages', 'messages.sender', 'client', 'lawyer', 'lawyer.user', 'case']
+        });
+        chat.messages = chat.messages || [];
 
         return chat;
     }

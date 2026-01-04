@@ -50,31 +50,81 @@ export class ChatGateway {
         relations: ['client', 'lawyer', 'lawyer.user'],
       });
 
-      if (chat) {
-        const recipientUser =
-          chat.client.id === senderId ? chat.lawyer.user : chat.client;
+      console.log('💬 Chat notification debug:', {
+        chatId: createMessageDto.chatId,
+        senderId,
+        hasChat: !!chat,
+        hasClient: !!chat?.client,
+        hasLawyer: !!chat?.lawyer,
+        hasLawyerUser: !!chat?.lawyer?.user,
+        clientId: chat?.client?.id,
+        lawyerId: chat?.lawyer?.id,
+        lawyerUserId: chat?.lawyer?.user?.id,
+      });
 
-        if (recipientUser?.fcmToken) {
-          const senderName =
-            chat.client.id === senderId
-              ? chat.client.name
-              : `${chat.lawyer.user.name} ${chat.lawyer.user.lastname}`;
+      if (!chat) {
+        console.log('❌ Chat not found:', createMessageDto.chatId);
+        return message;
+      }
 
-          await this.notificationsService.sendPushNotification(
-            recipientUser.fcmToken,
-            `Nuevo mensaje de ${senderName}`,
-            message.content,
-            {
-              type: 'chat_message',
-              chatId: createMessageDto.chatId.toString(),
-              senderId,
-              senderName,
-            },
-          );
+      if (!chat.client) {
+        console.log('❌ Chat has no client');
+        return message;
+      }
+
+      // Determine recipient: if sender is client, recipient is lawyer; otherwise client
+      let recipientUser;
+      let senderName;
+
+      if (chat.client.id === senderId) {
+        // Sender is client, recipient is lawyer
+        if (!chat.lawyer?.user) {
+          console.log('⚠️ Lawyer or lawyer.user not found for chat:', createMessageDto.chatId);
+          return message;
         }
+        recipientUser = chat.lawyer.user;
+        senderName = chat.client.name;
+      } else {
+        // Sender is lawyer, recipient is client
+        recipientUser = chat.client;
+        senderName = chat.lawyer?.user
+          ? `${chat.lawyer.user.name} ${chat.lawyer.user.lastname}`
+          : 'Abogado';
+      }
+
+      console.log('📱 Recipient info:', {
+        recipientId: recipientUser?.id,
+        recipientName: recipientUser?.name,
+        hasFcmToken: !!recipientUser?.fcmToken,
+        senderName,
+      });
+
+      if (recipientUser?.fcmToken) {
+        console.log('🔔 Sending push notification:', {
+          to: recipientUser.name,
+          from: senderName,
+          message: message.content.substring(0, 50),
+        });
+
+        await this.notificationsService.sendPushNotification(
+          recipientUser.fcmToken,
+          `Nuevo mensaje de ${senderName}`,
+          message.content,
+          {
+            type: 'chat_message',
+            chatId: createMessageDto.chatId.toString(),
+            senderId,
+            senderName,
+          },
+        );
+
+        console.log('✅ Push notification sent successfully');
+      } else {
+        console.log('⚠️ No FCM token found for recipient:', recipientUser?.name);
       }
     } catch (error) {
-      console.error('Error sending chat notification:', error);
+      console.error('❌ Error sending chat notification:', error);
+      console.error('Error stack:', error.stack);
     }
 
     return message;
