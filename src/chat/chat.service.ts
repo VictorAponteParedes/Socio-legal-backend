@@ -70,24 +70,30 @@ export class ChatService {
     }
 
     async findOrCreateChat(caseId: number, clientId: string, lawyerId: string) {
+        // First, try to find chat by caseId only (most important)
         let chat = await this.chatRepository.findOne({
             where: {
-                case: { id: caseId },
-                client: { id: clientId },
-                lawyer: { id: lawyerId }
+                case: { id: caseId }
             },
-            relations: ['messages', 'messages.sender']
+            relations: ['messages', 'messages.sender', 'client', 'lawyer', 'case']
         });
 
-        if (!chat) {
-            chat = this.chatRepository.create({
-                case: { id: caseId } as any,
-                client: { id: clientId } as any,
-                lawyer: { id: lawyerId } as any
-            });
-            await this.chatRepository.save(chat);
-            chat.messages = [];
+        // If chat exists for this case, return it
+        if (chat) {
+            console.log(`📱 Found existing chat for case ${caseId}:`, chat.id);
+            return chat;
         }
+
+        // If no chat exists, create new one
+        console.log(`🆕 Creating new chat for case ${caseId}, client: ${clientId}, lawyer: ${lawyerId}`);
+        chat = this.chatRepository.create({
+            case: { id: caseId } as any,
+            client: { id: clientId } as any,
+            lawyer: { id: lawyerId } as any
+        });
+        await this.chatRepository.save(chat);
+        chat.messages = [];
+
         return chat;
     }
 }
