@@ -9,6 +9,8 @@ import { Case } from './entities/case.entity';
 import { CaseProposal } from './entities/case-proposal.entity';
 import { CreateCaseDto } from './dto/create-case.dto';
 import { CreateProposalDto } from './dto/create-proposal.dto';
+import { CaseUpdate } from './entities/case-update.entity';
+import { CreateCaseUpdateDto } from './dto/create-case-update.dto';
 import { Lawyer } from '@/lawyers/lawyer.entity';
 import { NotificationsService } from '@/notifications/notifications.service';
 
@@ -21,8 +23,10 @@ export class CasesService {
     private proposalRepository: Repository<CaseProposal>,
     @InjectRepository(Lawyer)
     private lawyerRepository: Repository<Lawyer>,
+    @InjectRepository(CaseUpdate)
+    private caseUpdateRepository: Repository<CaseUpdate>,
     private readonly notificationsService: NotificationsService,
-  ) {}
+  ) { }
 
   async create(clientId: string, createCaseDto: CreateCaseDto) {
     const newCase = this.caseRepository.create({
@@ -224,5 +228,82 @@ export class CasesService {
     }
 
     return await this.findOne(caseId);
+  }
+
+  async addCaseUpdate(
+    caseId: number,
+    userId: string,
+    updateDto: CreateCaseUpdateDto,
+  ) {
+    const caseEntity = await this.findOne(caseId);
+
+    const lawyer = await this.lawyerRepository.findOne({
+      where: { user_id: userId },
+      relations: ['user'],
+    });
+
+    if (!lawyer) {
+      throw new BadRequestException('Usuario no es abogado');
+    }
+
+    if (caseEntity.assignedLawyerId !== lawyer.id) {
+      // Nota: assignedLawyerId es string (UUID) guardado en DB, lawyer.id es string UUID.
+      throw new BadRequestException(
+        'No tienes permiso para agregar bitácora a este caso (no asignado)',
+      );
+    }
+
+    const update = this.caseUpdateRepository.create({
+      ...updateDto,
+      caseId,
+      lawyerId: lawyer.id,
+    });
+
+    const savedUpdate = await this.caseUpdateRepository.save(update);
+
+    // Notificar al Cliente
+    if (caseEntity.client && caseEntity.client.fcmToken) {
+      const lawyerName = lawyer.user.name;
+      await this.notificationsService.sendPushNotification(
+        caseEntity.client.fcmToken,
+        'Nueva actualización en tu caso 📋',
+        `${lawyerName} agregó: ${updateDto.title}`,
+        {
+          type: 'info',
+          screen: 'ClientCaseDetail',
+          caseId: caseId.toString(),
+        }
+      );
+    }
+
+    return savedUpdate;
+  }
+
+  async getCaseUpdates(caseId: number, userId: string) {
+    const caseEntity = await this.findOne(caseId);
+
+    // Verifico si es el dueño (cliente)
+    // En case.entity, clientId es el user.id asociado al cliente
+    // PERO caseEntity.client es el User populateado.
+    const isOwner = caseEntity.client.id === userId;
+
+    let isAssignedLawyer = false;
+    if (!isOwner) {
+      // Chequeo si es el abogado asignado
+      const lawyer = await this.lawyerRepository.findOne({ where: { user_id: userId } });
+      if (lawyer && lawyer.id === caseEntity.assignedLawyerId) {
+        isAssignedLawyer = true;
+      }
+    }
+
+    if (!isOwner && !isAssignedLawyer) {
+      throw new BadRequestException('No tienes permiso para ver la bitácora');
+    }
+
+    return await this.caseUpdateRepository.find({
+      where: { caseId },
+      order: { createdAt: 'DESC' },
+      relations: ['lawyer', 'lawyer.user'],
+    });
   }
 }
