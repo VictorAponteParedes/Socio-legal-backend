@@ -23,6 +23,7 @@ import { CaseProposal } from '@/cases/entities/case-proposal.entity';
 import { ChatModule } from '@/chat/chat.module';
 import { Chat } from '@/chat/entities/chat.entity';
 import { Message } from '@/chat/entities/message.entity';
+import { CaseUpdate } from '@/cases/entities/case-update.entity';
 
 @Module({
   imports: [
@@ -44,8 +45,8 @@ import { Message } from '@/chat/entities/message.entity';
       password: process.env.DB_PASSWORD || 'Admin123.',
       database: process.env.DB_DATABASE || 'socio_legal',
       entities: [
-        User, Client, Lawyer, Specialization, PasswordResetCode, Case, CaseProposal,
-        Chat, Message // Added Chat and Message
+        User, Client, Lawyer, Specialization, PasswordResetCode, Case, CaseProposal, CaseUpdate,
+        Chat, Message
       ],
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.DB_LOGGING === 'true',
