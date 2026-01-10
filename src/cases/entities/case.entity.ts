@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMan
 import { User } from '@/users/entities/user.entity';
 import { Lawyer } from '@/lawyers/lawyer.entity';
 import { CaseProposal } from './case-proposal.entity';
+import { CaseUpdate } from './case-update.entity';
 
 @Entity('cases')
 export class Case {
@@ -45,6 +46,9 @@ export class Case {
 
     @OneToMany(() => CaseProposal, (proposal) => proposal.case)
     proposals: CaseProposal[];
+
+    @OneToMany('CaseUpdate', (update: CaseUpdate) => update.case)
+    updates: CaseUpdate[];
 
     @CreateDateColumn()
     createdAt: Date;
