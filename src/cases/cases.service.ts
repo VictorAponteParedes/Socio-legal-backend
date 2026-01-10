@@ -112,6 +112,7 @@ export class CasesService {
       relations: [
         'client',
         'assignedLawyer',
+        'assignedLawyer.user',
         'proposals',
         'proposals.lawyer',
         'proposals.lawyer.user',

@@ -77,4 +77,58 @@ export class UploadController {
             fullUrl: this.uploadService.getFullImageUrl(file.filename),
         };
     }
+
+    /**
+     * Upload de archivo general para un caso (PDF, Imagen, Doc)
+     */
+    @Post('case-file')
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: diskStorage({
+                destination: './uploads/cases',
+                filename: (req, file, callback) => {
+                    const uniqueName = `${randomUUID()}${extname(file.originalname)}`;
+                    callback(null, uniqueName);
+                },
+            }),
+            limits: {
+                fileSize: 10 * 1024 * 1024, // 10MB
+            },
+            fileFilter: (req, file, callback) => {
+                const allowedMimeTypes = [
+                    'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // .docx
+                ];
+
+                if (!allowedMimeTypes.includes(file.mimetype)) {
+                    return callback(
+                        new BadRequestException('Tipo de archivo no permitido. Use imágenes o PDF/DOC.'),
+                        false,
+                    );
+                }
+
+                callback(null, true);
+            },
+        }),
+    )
+    async uploadCaseFile(
+        @UploadedFile() file: Express.Multer.File,
+    ) {
+        if (!file) {
+            throw new BadRequestException('No se proporcionó ningún archivo');
+        }
+
+        // Return solo la URL relativa
+        return {
+            message: 'Archivo subido exitosamente',
+            url: `/uploads/cases/${file.filename}`,
+            filename: file.filename,
+            originalName: file.originalname,
+            mimetype: file.mimetype
+        };
+    }
 }
