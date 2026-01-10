@@ -11,6 +11,7 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CasesService } from './cases.service';
 import { CreateCaseDto } from './dto/create-case.dto';
 import { CreateProposalDto } from './dto/create-proposal.dto';
+import { CreateCaseUpdateDto } from './dto/create-case-update.dto';
 
 @Controller('cases')
 @UseGuards(JwtAuthGuard)
@@ -71,5 +72,19 @@ export class CasesController {
       +proposalId,
       req.user.userId,
     );
+  }
+
+  @Post(':id/updates')
+  addUpdate(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() updateDto: CreateCaseUpdateDto,
+  ) {
+    return this.casesService.addCaseUpdate(+id, req.user.userId, updateDto);
+  }
+
+  @Get(':id/updates')
+  getUpdates(@Request() req, @Param('id') id: string) {
+    return this.casesService.getCaseUpdates(+id, req.user.userId);
   }
 }
