@@ -14,6 +14,8 @@ import { CreateContactRequestDto } from './dto/create-contact-request.dto';
 import { UpdateContactRequestStatusDto } from './dto/update-contact-request.dto';
 import { Lawyer } from '@/lawyers/lawyer.entity';
 
+import { NotificationsService } from '@/notifications/notifications.service';
+
 @Injectable()
 export class ContactRequestsService {
   constructor(
@@ -21,7 +23,8 @@ export class ContactRequestsService {
     private readonly contactRequestRepository: Repository<ContactRequest>,
     @InjectRepository(Lawyer)
     private readonly lawyerRepository: Repository<Lawyer>,
-  ) {}
+    private readonly notificationsService: NotificationsService,
+  ) { }
 
   /**
    * Crear una nueva solicitud de contacto (Cliente -> Abogado)
@@ -33,6 +36,7 @@ export class ContactRequestsService {
     // Verificar si existe el abogado
     const lawyer = await this.lawyerRepository.findOne({
       where: { id: createDto.lawyerId },
+      relations: ['user'],
     });
     if (!lawyer) {
       throw new NotFoundException('Abogado no encontrado');
@@ -59,7 +63,17 @@ export class ContactRequestsService {
       if (existingRequest.status === ContactRequestStatus.REJECTED) {
         existingRequest.status = ContactRequestStatus.PENDING;
         existingRequest.message = createDto.message;
-        return await this.contactRequestRepository.save(existingRequest);
+        const updatedRequest = await this.contactRequestRepository.save(existingRequest);
+
+        if (lawyer.user?.fcmToken) {
+          this.notificationsService.sendPushNotification(
+            lawyer.user.fcmToken,
+            'Nueva Solicitud de Contacto',
+            'Un cliente desea contactar contigo nuevamente.',
+          ).catch(err => console.error(err));
+        }
+
+        return updatedRequest;
       }
     }
 
@@ -70,7 +84,17 @@ export class ContactRequestsService {
       status: ContactRequestStatus.PENDING,
     });
 
-    return await this.contactRequestRepository.save(newRequest);
+    const savedRequest = await this.contactRequestRepository.save(newRequest);
+
+    if (lawyer.user?.fcmToken) {
+      this.notificationsService.sendPushNotification(
+        lawyer.user.fcmToken,
+        'Nueva Solicitud de Contacto',
+        'Un cliente desea contactar contigo. Revisa tus solicitudes.',
+      ).catch(err => console.error(err));
+    }
+
+    return savedRequest;
   }
 
   async findAllForLawyer(lawyerUserId: string): Promise<ContactRequest[]> {
@@ -109,7 +133,7 @@ export class ContactRequestsService {
   ): Promise<ContactRequest> {
     const request = await this.contactRequestRepository.findOne({
       where: { id },
-      relations: ['lawyer'],
+      relations: ['lawyer', 'lawyer.user', 'client'],
     });
 
     if (!request) {
@@ -127,7 +151,19 @@ export class ContactRequestsService {
 
     const savedRequest = await this.contactRequestRepository.save(request);
 
-    // TODO: Si se acepta, aquí podríamos inicializar el chat room.
+    // Notify Client
+    if (request.client?.fcmToken) {
+      const statusText = updateDto.status === ContactRequestStatus.ACCEPTED ? 'Aceptada' : 'Rechazada';
+      const lawyerName = request.lawyer.user
+        ? `${request.lawyer.user.name} ${request.lawyer.user.lastname}`
+        : 'El abogado';
+
+      this.notificationsService.sendPushNotification(
+        request.client.fcmToken,
+        `Solicitud ${statusText}`,
+        `${lawyerName} ha ${statusText.toLowerCase()} tu solicitud de contacto.`
+      ).catch(err => console.error(err));
+    }
 
     return savedRequest;
   }

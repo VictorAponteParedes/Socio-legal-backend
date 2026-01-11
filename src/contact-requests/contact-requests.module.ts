@@ -5,8 +5,13 @@ import { ContactRequestsController } from './contact-requests.controller';
 import { ContactRequest } from './entities/contact-request.entity';
 import { Lawyer } from '@/lawyers/lawyer.entity';
 
+import { NotificationsModule } from '@/notifications/notifications.module';
+
 @Module({
-    imports: [TypeOrmModule.forFeature([ContactRequest, Lawyer])],
+    imports: [
+        TypeOrmModule.forFeature([ContactRequest, Lawyer]),
+        NotificationsModule
+    ],
     controllers: [ContactRequestsController],
     providers: [ContactRequestsService],
     exports: [ContactRequestsService]
