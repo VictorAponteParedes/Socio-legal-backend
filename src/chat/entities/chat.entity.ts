@@ -9,7 +9,7 @@ export class Chat {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => Case)
+    @ManyToOne(() => Case, { nullable: true })
     @JoinColumn({ name: 'caseId' })
     case: Case;
 
