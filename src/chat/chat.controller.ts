@@ -12,6 +12,11 @@ export class ChatController {
         return this.chatService.findOrCreateChat(body.caseId, body.clientId, body.lawyerId);
     }
 
+    @Post('init-direct')
+    async initDirectChat(@Body() body: { lawyerId: string; clientId: string }) {
+        return this.chatService.findOrCreateDirectChat(body.clientId, body.lawyerId);
+    }
+
     @Get('my-chats')
     async getMyChats(@Request() req) {
         return this.chatService.findMyChats(req.user.userId);
