@@ -24,15 +24,18 @@ import { ChatModule } from '@/chat/chat.module';
 import { Chat } from '@/chat/entities/chat.entity';
 import { Message } from '@/chat/entities/message.entity';
 import { CaseUpdate } from '@/cases/entities/case-update.entity';
+import { ContactRequest } from '@/contact-requests/entities/contact-request.entity';
+import { ContactRequestsModule } from './contact-requests/contact-requests.module';
 
 @Module({
   imports: [
     // Config Module
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'production'
-        ? '.env.production'
-        : '.env.development',
+      envFilePath:
+        process.env.NODE_ENV === 'production'
+          ? '.env.production'
+          : '.env.development',
       load: [envConfig],
     }),
 
@@ -45,12 +48,23 @@ import { CaseUpdate } from '@/cases/entities/case-update.entity';
       password: process.env.DB_PASSWORD || 'Admin123.',
       database: process.env.DB_DATABASE || 'socio_legal',
       entities: [
-        User, Client, Lawyer, Specialization, PasswordResetCode, Case, CaseProposal, CaseUpdate,
-        Chat, Message
+        User,
+        Client,
+        Lawyer,
+        Specialization,
+        PasswordResetCode,
+        Case,
+        CaseProposal,
+        CaseUpdate,
+        Chat,
+        Message,
+        ContactRequest,
       ],
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.DB_LOGGING === 'true',
-      ssl: process.env.DB_HOST?.includes('neon.tech') ? { rejectUnauthorized: false } : false,
+      ssl: process.env.DB_HOST?.includes('neon.tech')
+        ? { rejectUnauthorized: false }
+        : false,
     }),
 
     ServeStaticModule.forRoot({
@@ -66,8 +80,9 @@ import { CaseUpdate } from '@/cases/entities/case-update.entity';
     NotificationsModule,
     ChatModule,
     ClientsModule,
+    ContactRequestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
