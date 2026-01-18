@@ -26,6 +26,8 @@ import { Message } from '@/chat/entities/message.entity';
 import { CaseUpdate } from '@/cases/entities/case-update.entity';
 import { ContactRequest } from '@/contact-requests/entities/contact-request.entity';
 import { ContactRequestsModule } from './contact-requests/contact-requests.module';
+import { CaseActivitiesModule } from './case-activities/case-activities.module';
+import { CaseActivity } from './case-activities/entities/case-activity.entity';
 
 @Module({
   imports: [
@@ -59,6 +61,7 @@ import { ContactRequestsModule } from './contact-requests/contact-requests.modul
         Chat,
         Message,
         ContactRequest,
+        CaseActivity,
       ],
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.DB_LOGGING === 'true',
@@ -81,8 +84,9 @@ import { ContactRequestsModule } from './contact-requests/contact-requests.modul
     ChatModule,
     ClientsModule,
     ContactRequestsModule,
+    CaseActivitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
