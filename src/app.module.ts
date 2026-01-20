@@ -28,6 +28,7 @@ import { ContactRequest } from '@/contact-requests/entities/contact-request.enti
 import { ContactRequestsModule } from './contact-requests/contact-requests.module';
 import { CaseActivitiesModule } from './case-activities/case-activities.module';
 import { CaseActivity } from './case-activities/entities/case-activity.entity';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { CaseActivity } from './case-activities/entities/case-activity.entity';
     ClientsModule,
     ContactRequestsModule,
     CaseActivitiesModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
