@@ -11,6 +11,7 @@ import { User } from '@/users/entities/user.entity';
 import { Specialization } from '@/specializations/specialization.entity';
 import { UpdateLawyerProfileDto } from './dto/update-lawyer-profile.dto';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
+import { UpdateLocationDto } from './dto/update-location.dto';
 import { UserStatus } from '@/common/constants/user.constants';
 
 @Injectable()
@@ -22,7 +23,7 @@ export class LawyersService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Specialization)
     private readonly specializationRepository: Repository<Specialization>,
-  ) {}
+  ) { }
 
   /**
    * Obtener todos los abogados con perfil completo y activos
@@ -109,6 +110,24 @@ export class LawyersService {
     if (updateDto.country !== undefined) lawyer.country = updateDto.country;
     if (updateDto.isAvailable !== undefined)
       lawyer.isAvailable = updateDto.isAvailable;
+
+    return await this.lawyerRepository.save(lawyer);
+  }
+
+  /**
+   * Actualizar ubicación del abogado
+   */
+  async updateLocation(
+    userId: string,
+    locationDto: UpdateLocationDto,
+  ): Promise<Lawyer> {
+    const lawyer = await this.getMyProfile(userId);
+
+    // Actualizar campos de ubicación
+    if (locationDto.latitude !== undefined) lawyer.latitude = locationDto.latitude;
+    if (locationDto.longitude !== undefined) lawyer.longitude = locationDto.longitude;
+    if (locationDto.city !== undefined) lawyer.city = locationDto.city;
+    if (locationDto.country !== undefined) lawyer.country = locationDto.country;
 
     return await this.lawyerRepository.save(lawyer);
   }

@@ -16,6 +16,7 @@ import { LawyersService } from './lawyers.service';
 import { UpdateLawyerProfileDto } from './dto/update-lawyer-profile.dto';
 import { CompleteProfileDto } from './dto/complete-profile.dto';
 import { SearchLawyersDto } from './dto/search-lawyers.dto';
+import { UpdateLocationDto } from './dto/update-location.dto';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -24,7 +25,7 @@ import { UserRole } from '@/common/constants/user.constants';
 
 @Controller('lawyers')
 export class LawyersController {
-  constructor(private readonly lawyersService: LawyersService) {}
+  constructor(private readonly lawyersService: LawyersService) { }
 
   // ==================== ENDPOINTS PÚBLICOS ====================
 
@@ -120,6 +121,20 @@ export class LawyersController {
     @Body() updateDto: UpdateLawyerProfileDto,
   ) {
     return this.lawyersService.updateMyProfile(user.userId, updateDto);
+  }
+
+  /**
+   * Actualizar mi ubicación
+   */
+  @Patch('me/location')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.LAWYER)
+  @HttpCode(HttpStatus.OK)
+  updateMyLocation(
+    @CurrentUser() user: any,
+    @Body() locationDto: UpdateLocationDto,
+  ) {
+    return this.lawyersService.updateLocation(user.userId, locationDto);
   }
 
   /**
