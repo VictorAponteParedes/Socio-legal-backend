@@ -200,6 +200,7 @@ export class CasesService {
 
     const proposal = await this.proposalRepository.findOne({
       where: { id: proposalId, caseId },
+      relations: ['lawyer', 'lawyer.user'],
     });
 
     if (!proposal) {
@@ -215,6 +216,21 @@ export class CasesService {
     await this.proposalRepository.update(proposalId, {
       status: 'accepted',
     });
+
+    // Notificar al Abogado
+    if (proposal.lawyer?.user?.fcmToken) {
+      await this.notificationsService.sendPushNotification(
+        proposal.lawyer.user.fcmToken,
+        '¡Propuesta Aceptada! 🎉',
+        `El cliente ha aceptado tu propuesta para el caso "${caseEntity.title}". ¡Es hora de trabajar!`,
+        {
+          type: 'success',
+          screen: 'LawyerCaseDetail',
+          caseId: caseId.toString(),
+          sentTime: new Date().toISOString(),
+        },
+      );
+    }
 
     const otherProposals = await this.proposalRepository.find({
       where: { caseId },
