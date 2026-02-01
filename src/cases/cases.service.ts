@@ -11,6 +11,7 @@ import { CreateCaseDto } from './dto/create-case.dto';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { CaseUpdate } from './entities/case-update.entity';
 import { CreateCaseUpdateDto } from './dto/create-case-update.dto';
+import { UpdateCaseDto } from './dto/update-case.dto';
 import { Lawyer } from '@/lawyers/lawyer.entity';
 import { NotificationsService } from '@/notifications/notifications.service';
 
@@ -36,6 +37,21 @@ export class CasesService {
     return await this.caseRepository.save(newCase);
   }
 
+  async update(id: number, userId: string, updateCaseDto: UpdateCaseDto) {
+    const caseEntity = await this.findOne(id);
+
+    if (caseEntity.clientId !== userId) {
+      throw new BadRequestException('No tienes permiso para editar este caso');
+    }
+
+    if (caseEntity.status !== 'pendiente') {
+      throw new BadRequestException('Solo se pueden editar casos pendientes');
+    }
+
+    await this.caseRepository.update(id, updateCaseDto);
+    return await this.findOne(id);
+  }
+
   async findAll() {
     return await this.caseRepository.find({
       relations: ['client', 'assignedLawyer', 'proposals'],
@@ -57,9 +73,6 @@ export class CasesService {
   }
 
   async findAvailableCases(userId?: string) {
-    // IMPORTANTE: Todos los abogados deben ver los MISMOS casos disponibles
-    // Un caso está "disponible" si status='pendiente' (nadie lo aceptó aún)
-    // No importa si yo ya envié propuesta, si el caso sigue pendiente, TODOS lo ven
     const cases = await this.caseRepository
       .createQueryBuilder('case')
       .leftJoinAndSelect('case.client', 'client')

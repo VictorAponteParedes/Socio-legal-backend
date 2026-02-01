@@ -6,12 +6,14 @@ import {
   Param,
   UseGuards,
   Request,
+  Patch,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CasesService } from './cases.service';
 import { CreateCaseDto } from './dto/create-case.dto';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { CreateCaseUpdateDto } from './dto/create-case-update.dto';
+import { UpdateCaseDto } from './dto/update-case.dto';
 
 @Controller('cases')
 @UseGuards(JwtAuthGuard)
@@ -21,6 +23,11 @@ export class CasesController {
   @Post()
   create(@Request() req, @Body() createCaseDto: CreateCaseDto) {
     return this.casesService.create(req.user.userId, createCaseDto);
+  }
+
+  @Patch(':id')
+  update(@Request() req, @Param('id') id: string, @Body() updateCaseDto: UpdateCaseDto) {
+    return this.casesService.update(+id, req.user.userId, updateCaseDto);
   }
 
   @Get()
