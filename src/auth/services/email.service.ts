@@ -10,7 +10,9 @@ export class EmailService {
         const password = this.configService.get<string>('EMAIL_PASSWORD');
 
         this.transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false, // true for 465, false for other ports
             auth: {
                 user: this.configService.get<string>('EMAIL_USER'),
                 // Clean potential spaces from Google App Password
