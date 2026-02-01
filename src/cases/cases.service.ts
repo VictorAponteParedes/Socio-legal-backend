@@ -57,24 +57,20 @@ export class CasesService {
   }
 
   async findAvailableCases(userId?: string) {
-    const qb = this.caseRepository
+    // IMPORTANTE: Todos los abogados deben ver los MISMOS casos disponibles
+    // Un caso está "disponible" si status='pendiente' (nadie lo aceptó aún)
+    // No importa si yo ya envié propuesta, si el caso sigue pendiente, TODOS lo ven
+    const cases = await this.caseRepository
       .createQueryBuilder('case')
       .leftJoinAndSelect('case.client', 'client')
       .leftJoinAndSelect('case.proposals', 'proposals')
       .leftJoinAndSelect('proposals.lawyer', 'lawyer')
       .leftJoinAndSelect('lawyer.user', 'user')
-      .orderBy('case.createdAt', 'DESC');
+      .where('case.status = :status', { status: 'pendiente' })
+      .orderBy('case.createdAt', 'DESC')
+      .getMany();
 
-    if (userId) {
-      qb.where('case.status = :status', { status: 'pendiente' }).orWhere(
-        'user.id = :userId',
-        { userId },
-      );
-    } else {
-      qb.where('case.status = :status', { status: 'pendiente' });
-    }
-
-    return await qb.getMany();
+    return cases;
   }
 
   async findByLawyer(userId: string) {
@@ -167,23 +163,30 @@ export class CasesService {
 
     const savedProposal = await this.proposalRepository.save(proposal);
 
+    // Intentar enviar notificación push, pero NO hacer fallar si hay error
     if (caseEntity.client && caseEntity.client.fcmToken) {
-      const lawyerName = lawyer.user
-        ? `${lawyer.user.name} ${lawyer.user.lastname}`
-        : 'Un abogado';
+      try {
+        const lawyerName = lawyer.user
+          ? `${lawyer.user.name} ${lawyer.user.lastname}`
+          : 'Un abogado';
 
-      await this.notificationsService.sendPushNotification(
-        caseEntity.client.fcmToken,
-        '¡Nueva Propuesta Recibida! ⚖️',
-        `${lawyerName} ha enviado una propuesta para tu caso "${caseEntity.title}". Toca para ver detalles.`,
-        {
-          type: 'info',
-          screen: 'ClientMyCases',
-          caseId: caseId.toString(),
-          proposalId: savedProposal.id.toString(),
-          sentTime: new Date().toISOString(),
-        },
-      );
+        await this.notificationsService.sendPushNotification(
+          caseEntity.client.fcmToken,
+          '¡Nueva Propuesta Recibida! ⚖️',
+          `${lawyerName} ha enviado una propuesta para tu caso "${caseEntity.title}". Toca para ver detalles.`,
+          {
+            type: 'info',
+            screen: 'ClientMyCases',
+            caseId: caseId.toString(),
+            proposalId: savedProposal.id.toString(),
+            sentTime: new Date().toISOString(),
+          },
+        );
+      } catch (error) {
+        // Log el error pero NO propagar - la propuesta se guardó exitosamente
+        console.error('❌ Error enviando notificación push al cliente:', error.message);
+        // TODO: Opcionalmente limpiar token FCM inválido de la base de datos
+      }
     }
 
     return savedProposal;
@@ -217,19 +220,23 @@ export class CasesService {
       status: 'accepted',
     });
 
-    // Notificar al Abogado
+    // Notificar al Abogado (no hacer fallar si hay error)
     if (proposal.lawyer?.user?.fcmToken) {
-      await this.notificationsService.sendPushNotification(
-        proposal.lawyer.user.fcmToken,
-        '¡Propuesta Aceptada! 🎉',
-        `El cliente ha aceptado tu propuesta para el caso "${caseEntity.title}". ¡Es hora de trabajar!`,
-        {
-          type: 'success',
-          screen: 'LawyerCaseDetail',
-          caseId: caseId.toString(),
-          sentTime: new Date().toISOString(),
-        },
-      );
+      try {
+        await this.notificationsService.sendPushNotification(
+          proposal.lawyer.user.fcmToken,
+          '¡Propuesta Aceptada! 🎉',
+          `El cliente ha aceptado tu propuesta para el caso "${caseEntity.title}". ¡Es hora de trabajar!`,
+          {
+            type: 'success',
+            screen: 'LawyerCaseDetail',
+            caseId: caseId.toString(),
+            sentTime: new Date().toISOString(),
+          },
+        );
+      } catch (error) {
+        console.error('❌ Error enviando notificación push al abogado:', error.message);
+      }
     }
 
     const otherProposals = await this.proposalRepository.find({
@@ -278,19 +285,23 @@ export class CasesService {
 
     const savedUpdate = await this.caseUpdateRepository.save(update);
 
-    // Notificar al Cliente
+    // Notificar al Cliente (no hacer fallar si hay error)
     if (caseEntity.client && caseEntity.client.fcmToken) {
-      const lawyerName = lawyer.user.name;
-      await this.notificationsService.sendPushNotification(
-        caseEntity.client.fcmToken,
-        'Nueva actualización en tu caso 📋',
-        `${lawyerName} agregó: ${updateDto.title}`,
-        {
-          type: 'info',
-          screen: 'ClientCaseDetail',
-          caseId: caseId.toString(),
-        }
-      );
+      try {
+        const lawyerName = lawyer.user.name;
+        await this.notificationsService.sendPushNotification(
+          caseEntity.client.fcmToken,
+          'Nueva actualización en tu caso 📋',
+          `${lawyerName} agregó: ${updateDto.title}`,
+          {
+            type: 'info',
+            screen: 'ClientCaseDetail',
+            caseId: caseId.toString(),
+          }
+        );
+      } catch (error) {
+        console.error('❌ Error enviando notificación push al cliente:', error.message);
+      }
     }
 
     return savedUpdate;
