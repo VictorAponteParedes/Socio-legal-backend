@@ -193,13 +193,13 @@ export class AuthService {
         });
 
         await this.passwordResetCodeRepository.save(resetCode);
-
-        // Enviar email con código
-        await this.emailService.sendPasswordResetCode(
+        this.emailService.sendPasswordResetCode(
             user.email,
             code,
             user.name,
-        );
+        ).catch(err => {
+            console.error('⚠️ Error enviando correo en background:', err);
+        });
 
         return {
             message: 'Si el correo existe, recibirás un código de verificación',
