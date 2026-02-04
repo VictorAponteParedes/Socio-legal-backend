@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '@/users/entities/user.entity';
@@ -6,11 +6,28 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
-export class UploadService {
+export class UploadService implements OnModuleInit {
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
     ) { }
+
+    onModuleInit() {
+        const dirs = [
+            './uploads',
+            './uploads/profiles',
+            './uploads/cases',
+            './uploads/chat'
+        ];
+
+        dirs.forEach(dir => {
+            const fullPath = path.join(process.cwd(), dir);
+            if (!fs.existsSync(fullPath)) {
+                fs.mkdirSync(fullPath, { recursive: true });
+                console.log(`📁 Created directory: ${dir}`);
+            }
+        });
+    }
 
     /**
      * Guardar URL de imagen de perfil en la base de datos
@@ -63,8 +80,10 @@ export class UploadService {
     /**
      * Generar URL completa de la imagen
      */
-    getFullImageUrl(filename: string): string {
+    getFullImageUrl(filename: string, folder: string = 'profiles'): string {
         const baseUrl = process.env.API_URL || 'http://localhost:3000';
-        return `${baseUrl}/uploads/profiles/${filename}`;
+        // Quitar trailing slash si existe
+        const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+        return `${cleanBaseUrl}/uploads/${folder}/${filename}`;
     }
 }

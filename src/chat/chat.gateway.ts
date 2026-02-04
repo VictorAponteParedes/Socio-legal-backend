@@ -106,10 +106,14 @@ export class ChatGateway {
           message: message.content.substring(0, 50),
         });
 
+        const notificationBody = message.type === 'image'
+          ? '📷 Ha enviado una imagen'
+          : message.content;
+
         await this.notificationsService.sendPushNotification(
           recipientUser.fcmToken,
           `Nuevo mensaje de ${senderName}`,
-          message.content,
+          notificationBody,
           {
             type: 'chat_message',
             chatId: createMessageDto.chatId.toString(),

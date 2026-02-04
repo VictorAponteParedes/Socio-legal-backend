@@ -15,8 +15,18 @@ export class Message {
     @JoinColumn({ name: 'senderId' })
     sender: User;
 
-    @Column('text')
+    @Column('text', { nullable: true })
     content: string;
+
+    @Column({ nullable: true })
+    imageUrl: string;
+
+    @Column({
+        type: 'enum',
+        enum: ['text', 'image'],
+        default: 'text'
+    })
+    type: 'text' | 'image';
 
     @Column({ default: false })
     isRead: boolean;

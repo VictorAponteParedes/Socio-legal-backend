@@ -12,7 +12,7 @@ export class ChatService {
     private chatRepository: Repository<Chat>,
     @InjectRepository(Message)
     private messageRepository: Repository<Message>,
-  ) {}
+  ) { }
 
   // Regex patterns to detect sensitive info (Phone numbers and Email)
   private phoneRegex =
@@ -34,12 +34,16 @@ export class ChatService {
     });
     if (!chat) throw new NotFoundException('Chat no encontrado');
 
-    const sanitizedContent = this.sanitizeContent(createMessageDto.content);
+    const sanitizedContent = createMessageDto.content
+      ? this.sanitizeContent(createMessageDto.content)
+      : null;
 
     const message = this.messageRepository.create({
       chat,
       sender: { id: senderId } as any,
       content: sanitizedContent,
+      imageUrl: createMessageDto.imageUrl,
+      type: createMessageDto.type || 'text',
     });
 
     const savedMessage = await this.messageRepository.save(message);

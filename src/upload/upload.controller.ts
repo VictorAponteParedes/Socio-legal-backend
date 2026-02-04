@@ -131,4 +131,48 @@ export class UploadController {
             mimetype: file.mimetype
         };
     }
+
+    /**
+     * Upload de imagen para el chat
+     */
+    @Post('chat-image')
+    @UseGuards(JwtAuthGuard)
+    @HttpCode(HttpStatus.OK)
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: diskStorage({
+                destination: './uploads/chat',
+                filename: (req, file, callback) => {
+                    const uniqueName = `${randomUUID()}${extname(file.originalname)}`;
+                    callback(null, uniqueName);
+                },
+            }),
+            limits: {
+                fileSize: 5 * 1024 * 1024, // 5MB
+            },
+            fileFilter: (req, file, callback) => {
+                const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                if (!allowedMimeTypes.includes(file.mimetype)) {
+                    return callback(
+                        new BadRequestException('Solo se aceptan imágenes: JPG, PNG, WEBP'),
+                        false,
+                    );
+                }
+                callback(null, true);
+            },
+        }),
+    )
+    async uploadChatImage(
+        @UploadedFile() file: Express.Multer.File,
+    ) {
+        console.log('📸 Subiendo imagen al chat:', file?.filename);
+        if (!file) {
+            throw new BadRequestException('No se proporcionó ningún archivo');
+        }
+
+        return {
+            url: `/uploads/chat/${file.filename}`,
+            fullUrl: this.uploadService.getFullImageUrl(file.filename, 'chat'),
+        };
+    }
 }
