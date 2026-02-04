@@ -158,4 +158,24 @@ export class ChatGateway {
       isTyping: data.isTyping,
     });
   }
+
+  @SubscribeMessage('deleteMessage')
+  async handleDeleteMessage(
+    @MessageBody() data: { chatId: number; messageId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const userId = client.handshake.query.userId as string;
+    if (!userId) return;
+
+    try {
+      await this.chatService.removeMessage(data.messageId, userId);
+
+      // Notify everyone in the room to remove the message from UI
+      this.server.to(`chat_${data.chatId}`).emit('messageDeleted', {
+        messageId: data.messageId,
+      });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
+  }
 }

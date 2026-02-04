@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Chat } from './entities/chat.entity';
@@ -195,5 +195,20 @@ export class ChatService {
         'lawyer.user',
       ],
     });
+  }
+
+  async removeMessage(messageId: number, userId: string) {
+    const message = await this.messageRepository.findOne({
+      where: { id: messageId },
+      relations: ['sender'],
+    });
+
+    if (!message) throw new NotFoundException('Mensaje no encontrado');
+    if (message.sender.id !== userId) {
+      throw new BadRequestException('No tienes permiso para eliminar este mensaje');
+    }
+
+    await this.messageRepository.delete(messageId);
+    return true;
   }
 }
