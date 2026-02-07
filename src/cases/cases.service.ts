@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,6 +15,8 @@ import { CreateCaseUpdateDto } from './dto/create-case-update.dto';
 import { UpdateCaseDto } from './dto/update-case.dto';
 import { Lawyer } from '@/lawyers/lawyer.entity';
 import { NotificationsService } from '@/notifications/notifications.service';
+import { CaseClosure } from './entities/case-closure.entity';
+import { CloseCaseDto } from './dto/close-case.dto';
 
 @Injectable()
 export class CasesService {
@@ -26,6 +29,8 @@ export class CasesService {
     private lawyerRepository: Repository<Lawyer>,
     @InjectRepository(CaseUpdate)
     private caseUpdateRepository: Repository<CaseUpdate>,
+    @InjectRepository(CaseClosure)
+    private caseClosureRepository: Repository<CaseClosure>,
     private readonly notificationsService: NotificationsService,
   ) { }
 
@@ -125,6 +130,8 @@ export class CasesService {
         'proposals',
         'proposals.lawyer',
         'proposals.lawyer.user',
+        'closure',
+        'closure.closedByUser',
       ],
     });
 
@@ -346,5 +353,160 @@ export class CasesService {
       order: { createdAt: 'DESC' },
       relations: ['lawyer', 'lawyer.user'],
     });
+  }
+
+  async closeCase(caseId: number, userId: string, closeCaseDto: CloseCaseDto) {
+    const caseEntity = await this.caseRepository.findOne({
+      where: { id: caseId },
+      relations: ['client', 'assignedLawyer', 'assignedLawyer.user', 'closure'],
+    });
+
+    if (!caseEntity) {
+      throw new NotFoundException('Caso no encontrado');
+    }
+
+    // SOLO el abogado asignado puede cerrar el caso
+    const lawyer = await this.lawyerRepository.findOne({
+      where: { user_id: userId },
+    });
+
+    if (!lawyer) {
+      throw new BadRequestException('Solo los abogados pueden cerrar casos');
+    }
+
+    if (lawyer.id !== caseEntity.assignedLawyerId) {
+      throw new BadRequestException('Solo el abogado asignado puede cerrar este caso');
+    }
+
+    // Verificar que el caso esté en estado 'aceptado'
+    if (caseEntity.status !== 'aceptado') {
+      throw new BadRequestException('Solo se pueden cerrar casos aceptados');
+    }
+
+    // Verificar si ya está cerrado
+    if (caseEntity.closure) {
+      throw new BadRequestException('Este caso ya está cerrado');
+    }
+
+    // Crear el registro de cierre
+    const closure = this.caseClosureRepository.create({
+      caseId,
+      result: closeCaseDto.result,
+      closureReason: closeCaseDto.closureReason,
+      clientComment: closeCaseDto.clientComment,
+      rating: closeCaseDto.rating,
+      closedBy: userId,
+    });
+
+    await this.caseClosureRepository.save(closure);
+
+    // Actualizar el estado del caso
+    await this.caseRepository.update(caseId, {
+      status: 'cerrado',
+      completedAt: new Date(),
+    });
+
+    // Notificar al cliente
+    try {
+      if (caseEntity.client?.fcmToken) {
+        await this.notificationsService.sendPushNotification(
+          caseEntity.client.fcmToken,
+          'Caso Cerrado 📁',
+          `Tu abogado ha cerrado el caso "${caseEntity.title}". Resultado: ${closeCaseDto.result}`,
+          {
+            type: 'info',
+            screen: 'ClientCaseDetail',
+            caseId: caseId.toString(),
+          },
+        );
+      }
+    } catch (error) {
+      console.error('❌ Error enviando notificación de cierre:', error.message);
+    }
+
+    return await this.findOne(caseId);
+  }
+
+  async getCaseClosure(caseId: number) {
+    const closure = await this.caseClosureRepository.findOne({
+      where: { caseId },
+      relations: ['closedByUser', 'case'],
+    });
+
+    return closure;
+  }
+
+  async getLawyerRatings(lawyerId: string) {
+    const closures = await this.caseClosureRepository
+      .createQueryBuilder('closure')
+      .leftJoinAndSelect('closure.case', 'case')
+      .leftJoinAndSelect('case.client', 'client')
+      .where('case.assignedLawyerId = :lawyerId', { lawyerId })
+      .andWhere('closure.rating IS NOT NULL')
+      .orderBy('closure.closedAt', 'DESC')
+      .getMany();
+
+    const ratings = closures.map(c => c.rating).filter(r => r !== null);
+    const averageRating = ratings.length > 0
+      ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+      : null;
+
+    return {
+      averageRating,
+      totalRatings: ratings.length,
+      closures: closures.map(c => ({
+        id: c.id,
+        result: c.result,
+        rating: c.rating,
+        clientComment: c.clientComment,
+        closedAt: c.closedAt,
+        clientName: c.case?.client ? `${c.case.client.name} ${c.case.client.lastname}` : 'Usuario',
+      })),
+    };
+  }
+
+  async rateCaseClosure(
+    caseId: number,
+    userId: string,
+    ratingData: { rating: number; clientComment: string },
+  ) {
+    // Verificar que el caso existe y pertenece al cliente
+    const caseItem = await this.caseRepository.findOne({
+      where: { id: caseId },
+    });
+
+    if (!caseItem) {
+      throw new NotFoundException('Caso no encontrado');
+    }
+
+    if (caseItem.clientId !== userId) {
+      throw new ForbiddenException('No tienes permiso para calificar este caso');
+    }
+
+    // Buscar el cierre del caso
+    const closure = await this.caseClosureRepository.findOne({
+      where: { caseId },
+    });
+
+    if (!closure) {
+      throw new NotFoundException('Este caso no ha sido cerrado aún');
+    }
+
+    if (closure.rating) {
+      throw new BadRequestException('Este caso ya ha sido calificado');
+    }
+
+    // Validar la calificación
+    if (ratingData.rating < 1 || ratingData.rating > 5) {
+      throw new BadRequestException('La calificación debe estar entre 1 y 5');
+    }
+
+    // Actualizar el cierre con la calificación
+    closure.rating = ratingData.rating;
+    closure.clientComment = ratingData.clientComment || '';
+
+    await this.caseClosureRepository.save(closure);
+
+    return closure;
   }
 }

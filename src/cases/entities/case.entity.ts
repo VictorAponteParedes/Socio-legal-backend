@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, OneToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '@/users/entities/user.entity';
 import { Lawyer } from '@/lawyers/lawyer.entity';
 import { CaseProposal } from './case-proposal.entity';
 import { CaseUpdate } from './case-update.entity';
+import { CaseClosure } from './case-closure.entity';
 
 @Entity('cases')
 export class Case {
@@ -58,6 +59,9 @@ export class Case {
 
     @Column({ type: 'timestamp', nullable: true })
     acceptedAt: Date;
+
+    @OneToOne(() => CaseClosure, (closure) => closure.case, { nullable: true })
+    closure: CaseClosure;
 
     @Column({ type: 'timestamp', nullable: true })
     completedAt: Date;

@@ -14,6 +14,7 @@ import { CreateCaseDto } from './dto/create-case.dto';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { CreateCaseUpdateDto } from './dto/create-case-update.dto';
 import { UpdateCaseDto } from './dto/update-case.dto';
+import { CloseCaseDto } from './dto/close-case.dto';
 
 @Controller('cases')
 @UseGuards(JwtAuthGuard)
@@ -93,5 +94,34 @@ export class CasesController {
   @Get(':id/updates')
   getUpdates(@Request() req, @Param('id') id: string) {
     return this.casesService.getCaseUpdates(+id, req.user.userId);
+  }
+
+  @Post(':id/close')
+  closeCase(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() closeCaseDto: CloseCaseDto,
+  ) {
+    return this.casesService.closeCase(+id, req.user.userId, closeCaseDto);
+  }
+
+  @Get(':id/closure')
+  getCaseClosure(@Param('id') id: string) {
+    return this.casesService.getCaseClosure(+id);
+  }
+
+  @Get('lawyer/:lawyerId/ratings')
+  getLawyerRatings(@Param('lawyerId') lawyerId: string) {
+    return this.casesService.getLawyerRatings(lawyerId);
+  }
+
+  @Patch(':id/closure/rate')
+  @UseGuards(JwtAuthGuard)
+  rateCaseClosure(
+    @Param('id') id: string,
+    @Request() req,
+    @Body() ratingData: { rating: number; clientComment: string },
+  ) {
+    return this.casesService.rateCaseClosure(+id, req.user.userId, ratingData);
   }
 }

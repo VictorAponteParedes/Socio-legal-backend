@@ -24,6 +24,7 @@ import { ChatModule } from '@/chat/chat.module';
 import { Chat } from '@/chat/entities/chat.entity';
 import { Message } from '@/chat/entities/message.entity';
 import { CaseUpdate } from '@/cases/entities/case-update.entity';
+import { CaseClosure } from '@/cases/entities/case-closure.entity';
 import { ContactRequest } from '@/contact-requests/entities/contact-request.entity';
 import { ContactRequestsModule } from './contact-requests/contact-requests.module';
 import { CaseActivitiesModule } from './case-activities/case-activities.module';
@@ -58,6 +59,7 @@ import { CaseActivity } from './case-activities/entities/case-activity.entity';
         Case,
         CaseProposal,
         CaseUpdate,
+        CaseClosure,
         Chat,
         Message,
         ContactRequest,
