@@ -8,9 +8,11 @@ import {
     JoinColumn,
     ManyToMany,
     JoinTable,
+    OneToMany,
 } from 'typeorm';
 import { User } from '@/users/entities/user.entity';
 import { Specialization } from '@/specializations/specialization.entity';
+import { LawyerService } from '@/lawyer-services/lawyer-service.entity';
 
 @Entity('lawyers')
 export class Lawyer {
@@ -37,6 +39,9 @@ export class Lawyer {
         inverseJoinColumn: { name: 'specialization_id', referencedColumnName: 'id' },
     })
     specializations: Specialization[];
+
+    @OneToMany(() => LawyerService, (service) => service.lawyer)
+    services: LawyerService[];
 
     @Column({ type: 'int', default: 0 })
     yearsOfExperience: number;

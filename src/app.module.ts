@@ -29,6 +29,8 @@ import { ContactRequest } from '@/contact-requests/entities/contact-request.enti
 import { ContactRequestsModule } from './contact-requests/contact-requests.module';
 import { CaseActivitiesModule } from './case-activities/case-activities.module';
 import { CaseActivity } from './case-activities/entities/case-activity.entity';
+import { LawyerServicesModule } from './lawyer-services/lawyer-services.module';
+import { LawyerService } from './lawyer-services/lawyer-service.entity';
 
 @Module({
   imports: [
@@ -64,6 +66,7 @@ import { CaseActivity } from './case-activities/entities/case-activity.entity';
         Message,
         ContactRequest,
         CaseActivity,
+        LawyerService,
       ],
       synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.DB_LOGGING === 'true',
@@ -87,6 +90,7 @@ import { CaseActivity } from './case-activities/entities/case-activity.entity';
     ClientsModule,
     ContactRequestsModule,
     CaseActivitiesModule,
+    LawyerServicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
